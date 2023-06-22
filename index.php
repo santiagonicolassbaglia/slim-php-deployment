@@ -8,17 +8,17 @@ use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
 use Slim\Routing\RouteContext;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . "./vendor/autoload.php";
 
 require_once './db/AccesoDatos.php';
  
 
 require_once './controllers/EmpleadosController.php';
-require_once './controllers/UsuariosController.php';
+require_once './controllers/UsuarioController.php';
 
 // Load ENV
 //$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->safeLoad();
+//$dotenv->safeLoad();
 
 // Instantiate App
 $app = AppFactory::create();
