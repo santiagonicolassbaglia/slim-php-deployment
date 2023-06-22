@@ -1,164 +1,91 @@
 <?php
 
-
-
-    class Empleado
+class Empleado
 {
-    private $idEmpleado;
-    private $nombre;
-    private $sector;
-    private $rol;
+    public $id;
+    public $idTipoEmpleado;
+    public $tipoEmpleado;
+    public $idEstado;
+    public $estado;
+    public $usuario;
+    public $clave;
 
-    public function __construct($idEmpleado, $nombre, $sector, $rol)
-    {
-        $this->idEmpleado = $idEmpleado;
-        $this->nombre = $nombre;
-        $this->sector = $sector;
-        $this->rol = $rol;
-    }
-
-    public function getIdEmpleado()
-    {
-        return $this->idEmpleado;
-    }
-
-    public function getNombre()
-    {
-        return $this->nombre;
-    }
-
-    public function getSector()
-    {
-        return $this->sector;
-    }
-
-    public function getRol()
-    {
-        return $this->rol;
-    }
-
-
-    public function crearEmpleado()
+    public function CrearEmpleado()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO Empleados (idEmpleado,nombre, sector, rol ) VALUES (:idEmpleado,:nombre, :sector, :rol)");
-        $consulta->bindValue(':nombre', $this->nombre, PDO::PARAM_STR);
-        $consulta->bindValue(':sector', $this->sector, PDO::PARAM_STR);
-        $consulta->bindValue(':rol', $this->rol, PDO::PARAM_STR);
-        $consulta->bindValue(':idEmpleado',$this->idEmpleado, PDO::PARAM_INT);
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO 
+        empleados (idTipoEmpleado, idEstado, usuario, clave) 
+        VALUES (:idTipoEmpleado, :idEstado, :usuario, :clave)");
+
+        $claveHash = password_hash($this->clave, PASSWORD_DEFAULT);
+
+        $consulta->bindValue(':idTipoEmpleado', $this->idTipoEmpleado, PDO::PARAM_INT);
+        $consulta->bindValue(':idEstado', $this->idEstado, PDO::PARAM_INT);
+        $consulta->bindValue(':usuario', $this->usuario, PDO::PARAM_STR);
+        $consulta->bindValue(':clave', $claveHash);
         $consulta->execute();
 
         return $objAccesoDatos->obtenerUltimoId();
     }
 
-    public static function obtenerTodos()
+    public static function ObtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta('SELECT * FROM Empleados');
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 
+        E.id as id,
+        E.idTipoEmpleado as idTipoEmpleado,
+        E.idEstado as idEstado,
+        E.usuario as usuario,
+        E.clave as clave,
+        EE.estado as estado,
+        TE.tipo as tipoEmpleado
+        FROM empleados E
+        INNER JOIN estadoempleado EE ON EE.id = E.idEstado
+        INNER JOIN tipoempleado TE ON TE.id = E.idTipoEmpleado");
         $consulta->execute();
 
-        return $consulta->fetchAll(PDO::FETCH_CLASS, Empleado::class);
+        return $consulta->fetchAll(PDO::FETCH_CLASS, 'empleado');
     }
 
-    public static function obtenerPorId($idEmpleado)
+    public static function ObtenerUsuario($usuario)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta('SELECT * FROM Empleados WHERE idEmpleado = :idEmpleado');
-        $consulta->bindValue(':idEmpleado', $idEmpleado, PDO::PARAM_INT);
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 
+        E.Id as id,
+        E.IdTipoEmpleado as idTipoEmpleado,
+        E.IdEstado as idEstado,
+        E.Usuario as usuario,
+        E.Clave as clave,
+        EE.Estado as estado,
+        TE.Tipo as tipoEmpleado
+        FROM empleados
+        INNER JOIN estadoempleado EE ON EE.Id = E.IdEstado
+        INNER JOIN tipoempleado TE ON TE.Id = E.IdTipoEmpleado
+        WHERE usuario = :usuario");
+
+        $consulta->bindValue(':usuario', $usuario, PDO::PARAM_STR);
         $consulta->execute();
 
-        return $consulta->fetchObject(Empleado::class);
+        return $consulta->fetchObject('Empleado');
     }
 
-    public function actualizar()
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta('UPDATE Empleados SET nombre = :nombre, sector = :sector, rol = :rol WHERE idEmpleado = :idEmpleado');
-        $consulta->bindValue(':nombre', $this->nombre, PDO::PARAM_STR);
-        $consulta->bindValue(':sector', $this->sector, PDO::PARAM_STR);
-        $consulta->bindValue(':rol', $this->rol, PDO::PARAM_STR);
-        $consulta->bindValue(':idEmpleado', $this->idEmpleado, PDO::PARAM_INT);
-        $consulta->execute();
-    }
+    // public static function modificarUsuario()
+    // {
+    //     $objAccesoDato = AccesoDatos::obtenerInstancia();
+    //     $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET usuario = :usuario, clave = :clave WHERE id = :id");
+    //     $consulta->bindValue(':usuario', $this->usuario, PDO::PARAM_STR);
+    //     $consulta->bindValue(':clave', $this->clave, PDO::PARAM_STR);
+    //     $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+    //     $consulta->execute();
+    // }
 
-    public static function eliminar($idEmpleado)
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta('DELETE FROM Empleados WHERE idEmpleado = :idEmpleado');
-        $consulta->bindValue(':idEmpleado', $idEmpleado, PDO::PARAM_INT);
-        $consulta->execute();
-    }
-
-    public static function obtenerPorSector($sector)
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta('SELECT * FROM Empleados WHERE sector = :sector');
-        $consulta->bindValue(':sector', $sector, PDO::PARAM_STR);
-        $consulta->execute();
-
-        return $consulta->fetchAll(PDO::FETCH_CLASS, Empleado::class);
-    }
-
-    public static function obtenerPorRol($rol)
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta('SELECT * FROM Empleados WHERE rol = :rol');
-        $consulta->bindValue(':rol', $rol, PDO::PARAM_STR);
-        $consulta->execute();
-
-        return $consulta->fetchAll(PDO::FETCH_CLASS, Empleado::class);
-    }
-
-    public static function obtenerPorSectorYRol($sector, $rol)
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta('SELECT * FROM Empleados WHERE sector = :sector AND rol = :rol');
-        $consulta->bindValue(':sector', $sector, PDO::PARAM_STR);
-        $consulta->bindValue(':rol', $rol, PDO::PARAM_STR);
-        $consulta->execute();
-
-        return $consulta->fetchAll(PDO::FETCH_CLASS, Empleado::class);
-    }
-
-    public static function obtenerPorSectorYRolDisponible($sector, $rol)
-    {
-        $empleados = Empleado::obtenerPorSectorYRol($sector, $rol);
-        $empleadosDisponibles = array();
-
-        foreach ($empleados as $empleado) {
-            if ($empleado->estaDisponible()) {
-                $empleadosDisponibles[] = $empleado;
-            }
-        }
-
-        return $empleadosDisponibles;
-    }
-
-    public function estaDisponible()
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta('SELECT * FROM Pedidos WHERE idEmpleado = :idEmpleado AND estado = "en preparacion"');
-        $consulta->bindValue(':idEmpleado', $this->idEmpleado, PDO::PARAM_INT);
-        $consulta->execute();
-
-        return $consulta->rowCount() === 0;
-    }
-
-    public static function obtenerPorIdPedido($idPedido)
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta(
-            'SELECT e.* FROM Empleados e
-            INNER JOIN Pedidos p ON p.idEmpleado = e.idEmpleado
-            WHERE p.idPedido = :idPedido'
-        );
-        $consulta->bindValue(':idPedido', $idPedido, PDO::PARAM_INT);
-        $consulta->execute();
-
-        return $consulta->fetchObject(Empleado::class);
-    }
-
-    
+    // public static function borrarUsuario($usuario)
+    // {
+    //     $objAccesoDato = AccesoDatos::obtenerInstancia();
+    //     $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET fechaBaja = :fechaBaja WHERE id = :id");
+    //     $fecha = new DateTime(date("d-m-Y"));
+    //     $consulta->bindValue(':id', $usuario, PDO::PARAM_INT);
+    //     $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
+    //     $consulta->execute();
+    // }
 }
-
-?>
