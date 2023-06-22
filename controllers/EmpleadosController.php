@@ -1,38 +1,50 @@
 <?php
 require_once './models/Empleado.php';
 require_once './interfaces/IApiUsable.php';
+require_once './db/AccesoDatos.php';
 
 class EmpleadosController extends Empleado implements IApiUsable
 {
   public function CargarUno($request, $response, $args)
-  {
-      $parametros = $request->getParsedBody();
-  
-      $idTipoEmpleado = isset($parametros['idTipoEmpleado']) ? $parametros['idTipoEmpleado'] : null;
-      $idEstado = isset($parametros['idEstado']) ? $parametros['idEstado'] : null;
-      $usuario = isset($parametros['usuario']) ? $parametros['usuario'] : null;
-      $clave = isset($parametros['clave']) ? $parametros['clave'] : null;
-  
-      if ($idTipoEmpleado !== null && $idEstado !== null && $usuario !== null && $clave !== null) {
-          $empleado = new Empleado();
-          $empleado->idTipoEmpleado = $idTipoEmpleado;
-          $empleado->idEstado = $idEstado;
-          $empleado->usuario = $usuario;
-          $empleado->clave = $clave;
-  
-          $nuevoId = $empleado->CrearEmpleado();
-  
-          $payload = json_encode(array("mensaje" => "Empleado creado con éxito", "id" => $nuevoId));
-  
-          $response->getBody()->write($payload);
-          return $response->withHeader('Content-Type', 'application/json');
-      } else {
-          $payload = json_encode(array("mensaje" => "Faltan parámetros"));
-          $response->getBody()->write($payload);
-          return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
-      }
-  }
-  
+{
+    $parametros = $request->getParsedBody();
+
+    $requiredParams = ['idTipoEmpleado', 'idEstado', 'usuario', 'clave'];
+
+    $missingParams = [];
+    foreach ($requiredParams as $param) {
+        if (!isset($parametros[$param])) {
+            $missingParams[] = $param;
+        }
+    }
+
+    if (!empty($missingParams)) {
+        $payload = json_encode(array("error" => "Falta el parámetro: " . implode(', ', $missingParams)));
+        $response->getBody()->write($payload);
+        return $response
+            ->withStatus(400)
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+    $idTipoEmpleado = $parametros['idTipoEmpleado'];
+    $idEstado = $parametros['idEstado'];
+    $usuario = $parametros['usuario'];
+    $clave = $parametros['clave'];
+
+    $empleado = new Empleado();
+    $empleado->idTipoEmpleado = $idTipoEmpleado;
+    $empleado->idEstado = $idEstado;
+    $empleado->usuario = $usuario;
+    $empleado->clave = $clave;
+
+    $nuevoId = $empleado->CrearEmpleado();
+
+    $payload = json_encode(array("mensaje" => "Empleado creado con éxito", "id" => $nuevoId));
+
+    $response->getBody()->write($payload);
+    return $response
+        ->withHeader('Content-Type', 'application/json');
+}
     public function TraerUno($request, $response, $args)
     {
         $usuario = $args['usuario'];
