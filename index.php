@@ -31,6 +31,12 @@ $app->addErrorMiddleware(true, true, true);
 
 
 // Routes
-$app->post("/usuario", \UsuarioController::class. ":CargarUno");
-$app->post("/empleados", \EmpleadosController::class. ":CargarUno");
+// $app->post("/usuario", \UsuarioController::class. ":CargarUno");
+// $app->post("/empleados", \EmpleadosController::class. ":CargarUno");
+// $app->run();
+
+$app->group('/empleados', function (RouteCollectorProxy $group) {
+    $group->post('[/]', \EmpleadosController::class . ':CargarUno');
+
+});
 $app->run();
