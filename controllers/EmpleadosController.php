@@ -5,6 +5,33 @@ require_once './db/AccesoDatos.php';
 
 class EmpleadosController extends Empleado implements IApiUsable
 {
+
+
+    // public function CargarUno($request, $response, $args)
+    // {
+    //     $parametros = $request->getBody();
+
+    //     $idTipoEmpleado = $parametros['idTipoEmpleado'];
+    //     $idEstado = $parametros['idEstado'];
+    //     $usuario = $parametros['usuario'];
+    //     $clave = $parametros['clave'];
+
+    //     $empleado = new Empleado();
+    //     $empleado->idTipoEmpleado = $idTipoEmpleado;
+    //     $empleado->idEstado = $idEstado;
+    //     $empleado->usuario = $usuario;
+    //     $empleado->clave = $clave;
+
+    //     $nuevoId = $empleado->CrearEmpleado();
+
+    //     $payload = json_encode(array("mensaje" => "Empleado creado con exito", "id" => $nuevoId));
+
+    //     $response->getBody()->write($payload);
+    //     return $response
+    //       ->withHeader('Content-Type', 'application/json');
+    // }
+
+
   public function CargarUno($request, $response, $args)
 {
     $parametros = $request->getParsedBody();
