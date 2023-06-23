@@ -46,7 +46,7 @@ class EmpleadosController extends Empleado implements IApiUsable
     }
 
     if (!empty($missingParams)) {
-        $payload = json_encode(array("error" => "Falta el parámetro: " . implode(', ', $missingParams)));
+        $payload = json_encode(array("error" => "Falta el campo: " . implode(', ', $missingParams)));
         $response->getBody()->write($payload);
         return $response
             ->withStatus(400)
@@ -66,7 +66,7 @@ class EmpleadosController extends Empleado implements IApiUsable
 
     $nuevoId = $empleado->CrearEmpleado();
 
-    $payload = json_encode(array("mensaje" => "Empleado creado con éxito", "id" => $nuevoId));
+    $payload = json_encode(array("mensaje" => "El Empleado ah sido creado", "id" => $nuevoId));
 
     $response->getBody()->write($payload);
     return $response
