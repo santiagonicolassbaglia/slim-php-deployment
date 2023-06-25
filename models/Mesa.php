@@ -2,235 +2,121 @@
 
 class Mesa
 {
-    private $idMesa;
-    private $codigo;
-    private $estado;
-    private $cliente;
+    public $id;
+    public $codigo;
+    public $estadoId;
+    public $estadoMesa;
 
-    public function __construct($idMesa, $codigo, $estado, $cliente)
+    public static function ObtenerTodos()
     {
-        $this->idMesa = $idMesa;
-        $this->codigo = $codigo;
-        $this->estado = $estado;
-        $this->cliente = $cliente;
-    }
-
-    public function getIdMesa()
-    {
-        return $this->idMesa;
-    }
-
-    public function getCodigo()
-    {
-        return $this->codigo;
-    }
-
-    public function getEstado()
-    {
-        return $this->estado;
-    }
-
-    public function setEstado($estado)
-    {
-        $this->estado = $estado;
-    }
-
-    public function getCliente()
-    {
-        return $this->cliente;
-    }
-
-    public function setCliente(Cliente $cliente)
-    {
-        $this->cliente = $cliente;
-    }
-
-    public function setIdMesa($idMesa)
-    {
-        $this->idMesa = $idMesa;
-    }
-
-    public function setCodigo($codigo)
-    {
-        $this->codigo = $codigo;
-    }
-
-    public function __toString()
-    {
-        return "Id: $this->idMesa - Codigo: $this->codigo - Estado: $this->estado - Cliente: $this->cliente";
-    }
-
-    public function guardarMesa()
-    {
-        $retorno = false;
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            INSERT INTO mesas (codigo, estado, cliente)
-            VALUES (:codigo, :estado, :cliente)
-        ");
-        $consulta->bindValue(':codigo', $this->codigo, PDO::PARAM_STR);
-        $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
-        $consulta->bindValue(':cliente', $this->cliente, PDO::PARAM_STR);
-
-        if ($consulta->execute()) {
-            $this->idMesa = $objetoAccesoDato->obtenerUltimoId();
-            $retorno = true;
-        }
-
-        return $retorno;
-
-
-    }
-
-    public static function obtenerTodos()
-    {
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            SELECT idMesa, codigo, estado, cliente
-            FROM mesas
-        ");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 
+        M.Id as id,
+        M.Codigo as codigo,
+        M.EstadoId as estadoId,
+        EM.Estado as estadoMesa
+        FROM mesas M
+        INNER JOIN estadomesas EM ON EM.Id = M.EstadoId");
         $consulta->execute();
 
-        return $consulta->fetchAll(PDO::FETCH_CLASS, Mesa::class);
+        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Mesa');
     }
 
-    public static function obtenerUno($idMesa)
+    public static function ObtenerPorId($idMesa)
     {
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            SELECT idMesa, codigo, estado, cliente
-            FROM mesas
-            WHERE idMesa = :idMesa
-        ");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 
+        M.Id as id,
+        M.Codigo as codigo,
+        M.EstadoId as estadoId,
+        EM.Estado as estadoMesa
+        FROM mesas M
+        INNER JOIN estadomesas EM ON EM.Id = M.EstadoId
+        WHERE M.Id = :idMesa");
+
         $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_INT);
         $consulta->execute();
 
-        return $consulta->fetchObject(Mesa::class);
+        return $consulta->fetchObject('Mesa');
     }
 
-    public function actualizarMesa()
+    public static function ObtenerPorCodigo($codigo)
     {
-        $retorno = false;
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 
+        M.Id as id,
+        M.Codigo as codigo,
+        M.EstadoId as estadoId,
+        EM.Estado as estadoMesa
+        FROM mesas M
+        INNER JOIN estadomesas EM ON EM.Id = M.EstadoId
+        WHERE M.Codigo = :codigo");
 
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            UPDATE mesas
-            SET codigo = :codigo,
-                estado = :estado,
-                cliente = :cliente
-            WHERE idMesa = :idMesa
-        ");
-        $consulta->bindValue(':codigo', $this->codigo, PDO::PARAM_STR);
-        $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
-        $consulta->bindValue(':cliente', $this->cliente, PDO::PARAM_STR);
-        $consulta->bindValue(':idMesa', $this->idMesa, PDO::PARAM_INT);
-
-        if ($consulta->execute()) {
-            $retorno = true;
-        }
-
-        return $retorno;
-    }
-
-    public static function borrarMesa($idMesa)
-    {
-        $retorno = false;
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            DELETE FROM mesas
-            WHERE idMesa = :idMesa
-        ");
-        $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_INT);
-
-        if ($consulta->execute()) {
-            $retorno = true;
-        }
-
-        return $retorno;
-    }
-
-
-    public static function cambiarEstado($idMesa, $estado)
-    {
-        $retorno = false;
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            UPDATE mesas
-            SET estado = :estado
-            WHERE idMesa = :idMesa
-        ");
-        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
-        $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_INT);
-
-        if ($consulta->execute()) {
-            $retorno = true;
-        }
-
-        return $retorno;
-    }
-
-    public static function cambiarCliente($idMesa, $cliente)
-    {
-        $retorno = false;
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            UPDATE mesas
-            SET cliente = :cliente
-            WHERE idMesa = :idMesa
-        ");
-        $consulta->bindValue(':cliente', $cliente, PDO::PARAM_STR);
-        $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_INT);
-
-        if ($consulta->execute()) {
-            $retorno = true;
-        }
-
-        return $retorno;
-    }
-
-    public static function cambiarCodigo($idMesa, $codigo)
-    {
-        $retorno = false;
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            UPDATE mesas
-            SET codigo = :codigo
-            WHERE idMesa = :idMesa
-        ");
         $consulta->bindValue(':codigo', $codigo, PDO::PARAM_STR);
-        $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_INT);
+        $consulta->execute();
 
-        if ($consulta->execute()) {
-            $retorno = true;
-        }
-
-        return $retorno;
+        return $consulta->fetchObject('Mesa');
     }
 
-    public static function obtenerMesaPorCodigo($codigo)
+    public function CrearMesa()
     {
-        $retorno = null;
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO 
+        mesas (EstadoId, Codigo) 
+        VALUES (:estadoId, :codigo)");
 
-        $mesas = Mesa::obtenerTodos();
+        $codigo = Mesa::GenerarCodigo(5);
 
-        foreach ($mesas as $mesa) {
-            if ($mesa->codigo == $codigo) {
-                $retorno = $mesa;
-                break;
-            }
-        }
+        $consulta->bindValue(':estadoId', $this->estadoId, PDO::PARAM_INT);
+        $consulta->bindValue(':codigo', $codigo, PDO::PARAM_STR);
+        $consulta->execute();
 
-        return $retorno;
+        return $codigo;
     }
 
-    
-} 
+    public static function ActualizarEstadoMesa($idMesa, $estadoId)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE 
+        mesas SET EstadoId = :estadoId WHERE Id = :idMesa"); 
+        $consulta->bindValue(':estadoId', $estadoId, PDO::PARAM_INT);
+        $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_INT);
+        $consulta->execute();
+    }
 
+    public static function GenerarCodigo($largo)
+    {
+        return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyz"), 0, $largo); 
+    }
 
+    public static function TraerMesasDisponibles()
+    {
+        $idMesaCerrada = 4;
 
-?>
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 
+        M.Id as id,
+        M.Codigo as codigo,
+        M.EstadoId as estadoId,
+        EM.Estado as estadoMesa
+        FROM mesas M
+        INNER JOIN estadomesas EM ON EM.Id = M.EstadoId
+        WHERE M.EstadoId = :estadoDeMesa");
+
+        $consulta->bindValue(':estadoDeMesa', $idMesaCerrada, PDO::PARAM_INT);
+        $consulta->execute();
+        
+
+        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Mesa');
+    }
+
+    public static function PutMesa($mesa)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesas SET EstadoId = :estadoId WHERE Codigo = :codigoMesa");
+
+        $consulta->bindValue(':estadoId', $mesa->estadoId, PDO::PARAM_INT);
+        $consulta->bindValue(':codigoMesa', $mesa->codigo, PDO::PARAM_STR);
+        $consulta->execute();
+    }
+}

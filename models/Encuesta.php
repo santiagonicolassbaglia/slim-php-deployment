@@ -1,207 +1,88 @@
 <?php
-
+require_once './models/Mesa.php';
+require_once './models/Pedido.php';
 class Encuesta
 {
-    private $idEncuesta;
-    private $puntuacionMesa;
-    private $puntuacionRestaurante;
-    private $puntuacionMozo;
-    private $puntuacionCocinero;
-    private $comentario;
-    private $idPedido;
+    public $id;
+    public $idMesa;
+    public $idPedido;
+    public $puntuacionMesa;
+    public $puntuacionRestaurante;
+    public $puntuacionMozo;
+    public $puntuacionCocinero;
+    public $comentarios;
 
-    public function __construct($idEncuesta, $puntuacionMesa, $puntuacionRestaurante, $puntuacionMozo, $puntuacionCocinero, $comentario, $idPedido)
+   
+
+    public function CrearEncuesta( )
     {
-        $this->idEncuesta = $idEncuesta;
-        $this->puntuacionMesa = $puntuacionMesa;
-        $this->puntuacionRestaurante = $puntuacionRestaurante;
-        $this->puntuacionMozo = $puntuacionMozo;
-        $this->puntuacionCocinero = $puntuacionCocinero;
-        $this->comentario = $comentario;
-        $this->idPedido = $idPedido;
-    }
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO 
+        encuestas (IdMesa, IdPedido, PuntuacionMesa, PuntuacionRestaurante, PuntuacionMozo, PuntuacionCocinero, Comentarios) 
+        VALUES (:idMesa, :idPedido, :puntuacionMesa, :puntuacionRestaurante, :puntuacionMozo, :puntuacionCocinero, :comentarios)");
 
-    public function getIdEncuesta()
-    {
-        return $this->idEncuesta;
-    }
-
-    public function getPuntuacionMesa()
-    {
-        return $this->puntuacionMesa;
-    }
-
-    public function getPuntuacionRestaurante()
-    {
-        return $this->puntuacionRestaurante;
-    }
-
-    public function getPuntuacionMozo()
-    {
-        return $this->puntuacionMozo;
-    }
-
-    public function getPuntuacionCocinero()
-    {
-        return $this->puntuacionCocinero;
-    }
-
-    public function getComentario()
-    {
-        return $this->comentario;
-    }
-
-    public function getIdPedido()
-    {
-        return $this->idPedido;
-    }
-
-    public function setIdEncuesta($idEncuesta)
-    {
-        $this->idEncuesta = $idEncuesta;
-    }
-
-    public function setPuntuacionMesa($puntuacionMesa)
-    {
-        $this->puntuacionMesa = $puntuacionMesa;
-    }
-
-    public function setPuntuacionRestaurante($puntuacionRestaurante)
-    {
-        $this->puntuacionRestaurante = $puntuacionRestaurante;
-    }
-
-    public function setPuntuacionMozo($puntuacionMozo)
-    {
-        $this->puntuacionMozo = $puntuacionMozo;
-    }
-
-    public function setPuntuacionCocinero($puntuacionCocinero)
-    {
-        $this->puntuacionCocinero = $puntuacionCocinero;
-    }
-
-    public function setComentario($comentario)
-    {
-        $this->comentario = $comentario;
-    }
-
-    public function setIdPedido($idPedido)
-    {
-        $this->idPedido = $idPedido;
-    }
-
-
-    public function guardarEncuesta()
-    {
-        $retorno = false;
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            INSERT INTO encuestas (puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, comentario, idPedido)
-            VALUES (:puntuacionMesa, :puntuacionRestaurante, :puntuacionMozo, :puntuacionCocinero, :comentario, :idPedido)
-        ");
-
+        $consulta->bindValue(':idMesa', $this->idMesa, PDO::PARAM_INT);
+        $consulta->bindValue(':idPedido', $this->idPedido, PDO::PARAM_INT);
         $consulta->bindValue(':puntuacionMesa', $this->puntuacionMesa, PDO::PARAM_INT);
         $consulta->bindValue(':puntuacionRestaurante', $this->puntuacionRestaurante, PDO::PARAM_INT);
         $consulta->bindValue(':puntuacionMozo', $this->puntuacionMozo, PDO::PARAM_INT);
         $consulta->bindValue(':puntuacionCocinero', $this->puntuacionCocinero, PDO::PARAM_INT);
-        $consulta->bindValue(':comentario', $this->comentario, PDO::PARAM_STR);
-        $consulta->bindValue(':idPedido', $this->idPedido, PDO::PARAM_INT);
-
-        if ($consulta->execute()) {
-            $retorno = true;
-        }
-
-        return $retorno;
-    }
-
-    public static function obtenerEncuestas()
-    {
-        $encuestas = array();
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            SELECT idEncuesta, puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, comentario, idPedido
-            FROM encuestas
-        ");
-
+        $consulta->bindValue(':comentarios', $this->comentarios, PDO::PARAM_STR);
         $consulta->execute();
 
-        while ($encuesta = $consulta->fetchObject('Encuesta')) {
-            $encuestas[] = $encuesta;
-        }
+        return $objAccesoDatos->obtenerUltimoId();
+    }
+    
 
-        return $encuestas;
+    public static function ObtenerMejoresEncuestas()
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 
+        P.Id as id,
+        P.IdMesa as idMesa,
+        P.IdPedido as idPedido,
+        P.PuntuacionMesa as puntuacionMesa,
+        P.PuntuacionRestaurante as puntuacionRestaurante,
+        P.PuntuacionMozo as puntuacionMozo,
+        P.PuntuacionCocinero as puntuacionCocinero,
+        P.Comentarios as comentarios
+        FROM encuestas order by PuntuacionRestaurante desc  ");
+
+        $consulta->bindValue(':puntacion', 6, PDO::PARAM_INT);
+        $consulta->execute();
+
+        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Encuesta');
     }
 
+    public static function ValidarEncuesta($encuesta)
+    {
+        $mensajesError = array();
  
-    public static function obtenerEncuestaPorId($idEncuesta)
-    {
-        $encuesta = null;
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            SELECT idEncuesta, puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, comentario, idPedido
-            FROM encuestas
-            WHERE idEncuesta = :idEncuesta
-        ");
-
-        $consulta->bindValue(':idEncuesta', $idEncuesta, PDO::PARAM_INT);
-        $consulta->execute();
-
-        if ($consulta->rowCount() == 1) {
-            $encuesta = $consulta->fetchObject('Encuesta');
+        if(!is_numeric($encuesta->puntuacionMesa))
+        {
+            array_push($mensajesError, "Puntuacion Mesa es invalida");
         }
 
-        return $encuesta;
+        if(!is_numeric($encuesta->puntuacionRestaurante))
+        {
+            array_push($mensajesError, "Puntuacion Restaurante es invalida");
+        }
+
+        if(!is_numeric($encuesta->puntuacionMozo))
+        {
+            array_push($mensajesError, "Puntuacion Mozo es invalida");
+        }
+
+        if(!is_numeric($encuesta->puntuacionCocinero))
+        {
+            array_push($mensajesError, "Puntuacion Cocinero es invalida");
+        }
+
+        if(empty(str_replace(' ', '', $encuesta->comentarios)) || strlen($encuesta->comentarios) > 100)
+        {
+            array_push($mensajesError, "El comentario es invalido");
+        }
+
+        return $mensajesError;
     }
-
-    public static function obtenerEncuestaPorIdPedido($idPedido)
-    {
-        $encuesta = null;
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            SELECT idEncuesta, puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, comentario, idPedido
-            FROM encuestas
-            WHERE idPedido = :idPedido
-        ");
-
-        $consulta->bindValue(':idPedido', $idPedido, PDO::PARAM_INT);
-        $consulta->execute();
-
-        if ($consulta->rowCount() == 1) {
-            $encuesta = $consulta->fetchObject('Encuesta');
-        }
-
-        return $encuesta;
-    }
-
-
-    public static function obtenerEncuestasPorIdPedido($idPedido)
-    {
-        $encuestas = array();
-
-        $objetoAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objetoAccesoDato->prepararConsulta("
-            SELECT idEncuesta, puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, comentario, idPedido
-            FROM encuestas
-            WHERE idPedido = :idPedido
-        ");
-
-        $consulta->bindValue(':idPedido', $idPedido, PDO::PARAM_INT);
-        $consulta->execute();
-
-        while ($encuesta = $consulta->fetchObject('Encuesta')) {
-            $encuestas[] = $encuesta;
-        }
-
-        return $encuestas;
-
-
-
 }
-}
-
-?>
