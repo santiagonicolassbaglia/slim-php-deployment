@@ -13,22 +13,25 @@ class AutentificadorJWT
         {
             // Se instancia un objeto de la clase Empleado
             $empleado = new Empleado();
-            
-            // Se obtiene el empleado existente en base al usuario proporcionado
+             
             $empleadoExistente = $empleado->ObtenerUsuario($datos['usuario']);
     
-            // Se verifica si el empleado existe y si la contraseña coincide
-            if($empleadoExistente == null || !password_verify($datos['contraseña'], $empleadoExistente->clave))
+            var_dump(   $empleadoExistente , $datos['clave'] , $empleadoExistente->clave, password_verify($datos['clave'], $empleadoExistente->clave) , $datos['clave'] == $empleadoExistente->clave);
+          
+
+            if( $datos['clave'] == $empleadoExistente->clave && $datos['usuario'] == $empleadoExistente->usuario)
             {
-                // Si no existe o la contraseña no coincide, se lanza una excepción con el mensaje correspondiente
-                throw new Exception("Usuario o contraseña inválida");
-            }
-    
-            // Se agrega el dato idTipoEmpleado al array $datos utilizando el valor obtenido del empleado existente
-            $datos += ['idTipoEmpleado' => $empleadoExistente->idTipoEmpleado];
+                $datos['idTipoEmpleado'] = $empleadoExistente->idTipoEmpleado;
     
             // Se llama al método CrearToken de la clase AutentificadorJWT para generar el token JWT con los datos proporcionados y la clave secreta
             return AutentificadorJWT::CrearToken($datos, self::$claveSecreta);
+            }
+           else {
+ 
+                throw new Exception("Usuario o contraseña inválida");
+            }
+    
+ 
         } 
         catch (\Exception $ex) 
         {
@@ -37,6 +40,9 @@ class AutentificadorJWT
         }
     }
 
+  
+
+     
     private static function CrearToken($datos, $clave)
     {
         $ahora = time();
