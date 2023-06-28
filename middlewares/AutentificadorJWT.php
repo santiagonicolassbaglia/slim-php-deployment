@@ -1,7 +1,7 @@
 <?php
 
 use Firebase\JWT\JWT;
-
+ 
 class AutentificadorJWT
 {
     private static $claveSecreta = 'JWT';
@@ -39,10 +39,9 @@ class AutentificadorJWT
             throw $ex;
         }
     }
+ 
 
-  
-
-     
+ 
     private static function CrearToken($datos, $clave)
     {
         $ahora = time();
@@ -72,7 +71,8 @@ class AutentificadorJWT
         catch (Exception $e) 
         {
             // Si ocurre una excepción durante la decodificación, se lanza nuevamente para que sea manejada por el código que llamó a este método
-            throw $e;
+               ;throw $e;
+          
         }
     
         if ($decodificado->aud !== self::Aud()) 

@@ -44,7 +44,7 @@ $app->group('/autentificacion', function (RouteCollectorProxy $group) {
 
     $group->post('/crearToken', function (Request $request, Response $response) {    
       $parametros = $request->getParsedBody();
-  
+     
       $usuario = $parametros['usuario'];
       $contraseña = $parametros['clave'];
   
@@ -66,7 +66,12 @@ $app->group('/autentificacion', function (RouteCollectorProxy $group) {
     });
   });
 
+ 
+
   
+ 
+    
+
 
 // Routes
 // $app->post("/usuario", \UsuarioController::class. ":CargarUno");
@@ -87,24 +92,20 @@ $app->group('/autentificacion', function (RouteCollectorProxy $group) {
 
 
 $app->group('/empleados', function (RouteCollectorProxy $group) {
-    $group->get('[/]', \EmpleadosController::class . ':TraerTodos')->add(\Logger::class . ':VerificarCredenciales');
+  $group->post('[/]', \EmpleadosController::class . ':CargarUno');
+  $group->get('[/csv]', \EmpleadosController::class . ':GenerarCSV');
+  $group->post('[/CargarCSV]', \EmpleadosController::class . ':CargarCSV');
+
+  
+  $group->get('[/]', \EmpleadosController::class . ':TraerTodos');
     $group->get('/csv', \EmpleadosController::class . ':ObtenerCSV');
     $group->get('/pdf', \EmpleadosController::class . ':ObtenerPDF');
     $group->get('/{usuario}', \EmpleadosController::class . ':TraerUno')->add(\Logger::class . ':VerificarCredenciales');
-    $group->post('[/]', \EmpleadosController::class . ':CargarUno')->add(\Logger::class . ':VerificarCredenciales');
-    $group->post('/cargar/csv', \EmpleadosController::class . ':CargarCSV');
-    
+   
   });
    
   
-  $app->group('/mesas', function (RouteCollectorProxy $group) {
-    $group->get('[/]', \MesasController::class . ':TraerTodos');
-    $group->get('/disponibles', \MesasController::class . ':TraerDisponible');
-    $group->get('/estadistica/usadas', \MesasController::class . ':ObtenerMesasMasUsadas');
-    $group->post('[/]', \MesasController::class . ':CargarUno');
-    $group->post('/estado', \MesasController::class . ':CambiarMesaServida');
-  })->add(\Logger::class . ':VerificarCredenciales');
-  
+
   $app->group('/productos', function (RouteCollectorProxy $group) {
     $group->get('[/]', \ProductosController::class . ':TraerTodos')->add(\Logger::class . ':VerificarCredenciales');
     $group->get('/pdf', \ProductosController::class . ':ObtenerPDF');
@@ -132,5 +133,18 @@ $app->group('/empleados', function (RouteCollectorProxy $group) {
     $group->get('[/]', \EncuestaController::class . ':MejoresEncuestas')->add(\Logger::class . ':VerificarCredenciales');
   });
   
+
+
+  $app->group('/mesas', function (RouteCollectorProxy $group) {
+    $group->post('/estado', \MesasController::class . ':CambiarMesaServida');
+    $group->post('[/]', \MesasController::class . ':CargarUno');
+    $group->get('[/]', \MesasController::class . ':TraerTodos');
+    $group->get('/disponibles', \MesasController::class . ':TraerDisponible');
+    $group->get('/estadistica/usadas', \MesasController::class . ':ObtenerMesasMasUsadas');
+   
+   
+  })->add(\Logger::class . ':VerificarCredenciales');
+  
+
   $app->run();
   

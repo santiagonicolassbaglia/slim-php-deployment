@@ -2,7 +2,7 @@
 require_once './models/Empleado.php';
 require_once './interfaces/IApiUsable.php';
 require_once './db/AccesoDatos.php';
- 
+require_once './middlewares/AutentificadorJWT.php';
 
  
 
@@ -69,7 +69,17 @@ class EmpleadosController extends Empleado
     $empleado->usuario = $usuario;
     $empleado->clave = $clave;
 
+
+     //CrearToken
+      $datos = array('usuario' => $usuario, 'clave' => $clave);
+      $token = AutentificadorJWT::CrearTokenEmpleado($datos);
+      $payload = json_encode(array('usuario' => $usuario, 'jwt' => $token));
+      $response->getBody()->write($payload);
+   
+        
+   
     $nuevoId = $empleado->CrearEmpleado();
+
 
     $payload = json_encode(array("mensaje" => "El Empleado ah sido creado", "id" => $nuevoId));
 
@@ -192,73 +202,45 @@ public function TraerTodos($request, $response, $args)
  
     public function  CargarCSV($request, $response, $args)
     {
-      $payload = null;
+      $archivo= "./csv/empleado.csv";
 
-      try 
-      {
-        $csv = $_FILES['csv'];
-        $lista = Empleado::CargarDesdeCSV($csv["tmp_name"]);
-        $errores = null;
-  
-        foreach ($lista as $key => $empleado) 
-        {
-          $errores = Empleado::Validar($empleado->usuario);
-        }
-  
-        if(count($errores) > 0)
-        {
-          throw new Exception(json_encode($errores), 800);
-        }
-  
-        foreach ($lista as $key => $empleado) 
-        {
-          $nuevoId = $empleado->CrearEmpleado();
-          $empleado->id = $nuevoId;
-        }
-  
-        $payload = json_encode(array("listaEmpleados" => $lista));
-      } 
-      catch (Exception $ex) 
-      {
-          $mensaje = $ex->getMessage();
+      if(($leer= fopen($archivo, 'r')) !== false){
+          $fila= fgetcsv($leer);
+          while(($fila=fgetcsv($leer)) !== false){
+              $usuario = new Empleado();
+              $usuario->id= $fila[0];
+              $usuario->idTipoEmpleado= $fila[1];
+              $usuario->idEstado = $fila[2];
+              $usuario->usuario = $fila[3];
+              $usuario->clave = $fila[4];
 
-          if($ex->getCode() == 800)
-          {
-              $mensaje = json_decode($ex->getMessage());
+              $usuario->CrearEmpleado();
           }
-
-          $payload = json_encode(array('Error' => $mensaje));
+          fclose($leer);
       }
-      finally
-      {
-          $response->getBody()->write($payload);
-          return $response->withHeader('Content-Type', 'application/json');
-      }
+      $response->getBody()->write("Se cargo correctamente");
+      return $response;
     }
 
-    public function generarCSV($request, $response, $args)
-    { 
-         
-            $empleados = Empleado::ObtenerTodos();
-
-          
-            $rutaArchivo = "./empleados.csv";
-            $this->generarArchivoCSV($empleados, $rutaArchivo );
-
-            // Descargar el archivo CSV
-            $fileResponse = $response->withHeader('Content-Type', 'text/csv')
-                ->withHeader('Content-Disposition', 'attachment; filename="empleados.csv"')
-                ->withHeader('Pragma', 'no-cache')
-                ->withHeader('Expires', '0')
-                ->withHeader('Content-Length', filesize($rutaArchivo));
-
-            readfile($rutaArchivo);
-            unlink($rutaArchivo);
-
-            return $fileResponse;
-         
+    public function GenerarCSV($request, $response, $args)
+    {
+        // Obtener la lista de empleados
+        $empleados = Empleado::ObtenerTodos();
+    
+        // Crear el contenido del archivo CSV
+        $csvContent = "Id,TipoEmpleado,Estado,Usuario\n";
+        foreach ($empleados as $empleado) {
+            $line = "{$empleado->id},{$empleado->tipoEmpleado},{$empleado->estado},{$empleado->usuario}\n";
+            $csvContent .= $line;
+        }
+    
+        // Definir las cabeceras y el contenido del archivo de respuesta
+        $response = $response->withHeader('Content-Type', 'text/csv');
+        $response = $response->withHeader('Content-Disposition', 'attachment; filename="empleados.csv"');
+        $response->getBody()->write($csvContent);
+    
+        return $response;
     }
-
     
     // public function ObtenerPDF($request, $response, $args)
     // {

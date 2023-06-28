@@ -30,21 +30,25 @@ class Empleado
 
     public static function ObtenerTodos()
     {
+     
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT 
-        E.Id as id,
-        E.idTipoEmpleado as idTipoEmpleado,
-        E.idEstado as idEstado,
-        E.usuario as usuario,
-        E.clave as clave,
-        EE.Estado as estado,
-        TE.Tipo as tipoEmpleado
-        FROM empleados E
-        INNER JOIN estadoempleado EE ON EE.Id = E.idEstado
-        INNER JOIN tipoempleado TE ON TE.Id = E.idTipoEmpleado");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM empleados");
         $consulta->execute();
+        $empleados= array();
 
-        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Empleado');
+        while($fila = $consulta->fetch(PDO::FETCH_ASSOC)){
+            $emp= new Empleado();
+            $emp->id = $fila['id'];
+            $emp->idTipoEmpleado = $fila['idTipoEmpleado'];
+            $emp->idEstado = $fila['idEstado'];
+            $emp->usuario = $fila['usuario'];
+            $emp->clave = $fila['clave'];
+            array_push($empleados,$emp);
+            var_dump($empleados);
+        }
+         
+        
+        return $empleados;
     }
 
     public static function Obtenerusuario($usuario)
@@ -222,25 +226,12 @@ class Empleado
         $consulta->execute();
     }
 
-    public static function CargarDesdeCSV($rutaArchivo)
-{
-    $filas = array();
-    
-    try {
-        $archivo = fopen($rutaArchivo, 'r');
-        
-        if (!$archivo) {
-            throw new Exception("Error al abrir el archivo CSV.");
-        }
-        
-         
-        while (($datos = fgetcsv($archivo)) !== false) {
-            $fila = array_map('trim', $datos);
-            
-            
-            if (count($fila) != 4) {
-                throw new Exception("Error en el formato del archivo CSV.");
-            }
+    public static function CargarDesdeCSV( $request,  $response, $args){
+        $archivo= "./csv/usuarios.csv";
+
+        if(($lector= fopen($archivo, 'r')) !== false){
+            $datos= fgetcsv($lector);
+            while(($fila=fgetcsv($lector)) !== false){
             
             // Crear un objeto Empleado con los datos de la fila
             $empleado = new Empleado();
@@ -249,19 +240,12 @@ class Empleado
             $empleado->idEstado = $datos[2];
             $empleado->usuario = $datos[3];
             $empleado->clave = $datos[4];
-            
-            // Agregar el objeto Empleado a la lista de filas
-            $filas[] = $empleado;
+            $empleado->CrearEmpleado();
         }
-        
-        fclose($archivo);
-    } catch (Exception $ex) {
-        
-        $mensaje = "Error al cargar los datos desde el archivo CSV: " . $ex->getMessage();
-        throw new Exception($mensaje);
+        fclose($lector);
     }
-    
-    return $filas;
+    $response->getBody()->write("Se cargo correctamente");
+    return $response;
 }
 
 
