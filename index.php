@@ -100,17 +100,17 @@ $app->group('/empleados', function (RouteCollectorProxy $group) {
   $group->get('[/]', \EmpleadosController::class . ':TraerTodos');
     $group->get('/csv', \EmpleadosController::class . ':ObtenerCSV');
     $group->get('/pdf', \EmpleadosController::class . ':ObtenerPDF');
-    $group->get('/{usuario}', \EmpleadosController::class . ':TraerUno')->add(\Logger::class . ':VerificarCredenciales');
+    $group->get('/{usuario}', \EmpleadosController::class . ':TraerUno') ->add(new SoloAdmin()) ;
    
   });
    
   
 
   $app->group('/productos', function (RouteCollectorProxy $group) {
-    $group->get('[/]', \ProductosController::class . ':TraerTodos')->add(\Logger::class . ':VerificarCredenciales');
+    $group->get('[/]', \ProductosController::class . ':TraerTodos') ->add(new SoloAdmin()) ;
     $group->get('/pdf', \ProductosController::class . ':ObtenerPDF');
     $group->get('/csv', \ProductosController::class . ':ObtenerCSV');
-    $group->post('[/]', \ProductosController::class . ':CargarUno')->add(\Logger::class . ':VerificarCredenciales');
+    $group->post('[/]', \ProductosController::class . ':CargarUno') ->add(new SoloAdmin()) ;
     $group->post('/cargar/csv', \ProductosController::class . ':CargarCSV');
   });
   
@@ -130,7 +130,7 @@ $app->group('/empleados', function (RouteCollectorProxy $group) {
   
   $app->group('/encuesta', function (RouteCollectorProxy $group) {
     $group->post('[/]', \EncuestaController::class . ':AltaEncuesta');
-    $group->get('[/]', \EncuestaController::class . ':MejoresEncuestas')->add(\Logger::class . ':VerificarCredenciales');
+    $group->get('[/]', \EncuestaController::class . ':MejoresEncuestas') ->add(new ConToken()) ;
   });
   
 
