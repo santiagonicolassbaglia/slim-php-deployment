@@ -46,9 +46,9 @@ $app->group('/autentificacion', function (RouteCollectorProxy $group) {
       $parametros = $request->getParsedBody();
   
       $usuario = $parametros['usuario'];
-      $contraseña = $parametros['contraseña'];
+      $contraseña = $parametros['clave'];
   
-      $datos = array('usuario' => $usuario, 'contraseña' => $contraseña);
+      $datos = array('usuario' => $usuario, 'clave' => $contraseña);
   
       try 
       {
