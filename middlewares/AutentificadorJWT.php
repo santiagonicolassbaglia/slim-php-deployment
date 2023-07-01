@@ -4,7 +4,7 @@ use Firebase\JWT\JWT;
  
 class AutentificadorJWT
 {
-    private static $claveSecreta = 'JWT';
+    private static $claveSecreta = 'tioSanti';
     private static $tipoEncriptacion = ['HS256'];
 
     public static function CrearTokenEmpleado($datos)
@@ -14,17 +14,22 @@ class AutentificadorJWT
             // Se instancia un objeto de la clase Empleado
             $empleado = new Empleado();
              
-            $empleadoExistente = $empleado->ObtenerUsuario($datos['usuario']);
-    
+            $empleadoExistente = $empleado->getEmpleadoPorNombre($datos['nombre']);
+            $clave = $datos["clave"];
+            $claveHasheada = md5($clave);
             var_dump(   $empleadoExistente , $datos['clave'] , $empleadoExistente->clave, password_verify($datos['clave'], $empleadoExistente->clave) , $datos['clave'] == $empleadoExistente->clave);
           
 
-            if( $datos['clave'] == $empleadoExistente->clave && $datos['usuario'] == $empleadoExistente->usuario)
+        
+            if($empleadoExistente != null && $claveHasheada == $datos->clave)
             {
-                $datos['idTipoEmpleado'] = $empleadoExistente->idTipoEmpleado;
-    
-            // Se llama al método CrearToken de la clase AutentificadorJWT para generar el token JWT con los datos proporcionados y la clave secreta
-            return AutentificadorJWT::CrearToken($datos, self::$claveSecreta);
+                $datos = array('id'=> $datos->id, 'nombre' => $datos->nombre, "rol"=> $datos->rol);
+                return AutentificadorJWT::CrearToken($datos);
+           
+
+                
+ 
+            
             }
            else {
  
@@ -42,17 +47,17 @@ class AutentificadorJWT
  
 
  
-    private static function CrearToken($datos, $clave)
+    private static function CrearToken($datos )
     {
         $ahora = time();
         $payload = array(
             'iat' => $ahora,//cuando se creo el jwt
-            'exp' => $ahora + (800000000000000000), // tiempo de vencimiento
+            'exp' => $ahora + (24*24*60), // tiempo de vencimiento
             'aud' => self::Aud(),// Audiencia del token (destinatario)
             'data' => $datos,// datos del jwt
             'app' => "JWT"// info de la aplicacion
         );
-        return JWT::encode($payload, $clave);
+        return JWT::encode($payload, self::$claveSecreta);
     }
 
 

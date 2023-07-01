@@ -3,6 +3,8 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response;
+require_once './middlewares/AutentificadorJWT.php';
+
 
 class SoloAdmin
 {
@@ -15,14 +17,23 @@ class SoloAdmin
         try
         {
             $data = AutentificadorJWT::ObtenerData($token);
-            if($data->tipo == "admin")
+            if($data->rol == "Mozo")
+            {
+                $response= $handler->handle($request);
+            } 
+
+            if ($data->rol == "Socio")
             {
                 $response= $handler->handle($request);
             }
             else
             {
-                $response->getBody()->write(json_encode(array('Error' => "Accion reservada solamente para los administradores.")));
+                $response->getBody()->write(json_encode(array('Error' => "Esta accion no le pertenece.")));
             }
+
+
+
+            
         }
         catch(Exception $excepcion)
         {

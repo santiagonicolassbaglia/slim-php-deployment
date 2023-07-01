@@ -10,7 +10,7 @@ require_once './middlewares/AutentificadorJWT.php';
 
 class EmpleadosController extends Empleado 
 {
-
+    public static $roles = array("Pastelero","Bartender", "Cocinero", "Cervecero", "Mozo", "Socio");
 
     // public function CargarUno($request, $response, $args)
     // {
@@ -41,7 +41,7 @@ class EmpleadosController extends Empleado
 {
     $parametros = $request->getParsedBody();
 
-    $requiredParams = ['idTipoEmpleado', 'idEstado', 'usuario', 'clave'];
+    $requiredParams = ['nombre', 'clave', 'rol' ];
 
     $missingParams = [];
     foreach ($requiredParams as $param) {
@@ -58,30 +58,34 @@ class EmpleadosController extends Empleado
             ->withHeader('Content-Type', 'application/json');
     }
 
-    $idTipoEmpleado = $parametros['idTipoEmpleado'];
-    $idEstado = $parametros['idEstado'];
-    $usuario = $parametros['usuario'];
-    $clave = $parametros['clave'];
+    $nombre = $parametros['nombre'];
+        $clave = $parametros['clave'];
+        $claveHasheada = md5($clave);
+        $rol = $parametros['rol'];
 
-    $empleado = new Empleado();
-    $empleado->idTipoEmpleado = $idTipoEmpleado;
-    $empleado->idEstado = $idEstado;
-    $empleado->usuario = $usuario;
-    $empleado->clave = $clave;
+        if(in_array($rol, $this::$roles))
+        {
+            $empleado = new Empleado();
+            $empleado->nombre = $nombre;
+            $empleado->clave = $claveHasheada;
+            $empleado->rol = $rol;
+            $empleado->altaEmpleado();
+            $payload = json_encode(array("Mensaje" => "Usuario creado con exito"));
+        }
+        else
+        {
+            $payload = json_encode(array("Mensaje" => "El Rol es inexistente."));
+        }
 
 
-     //CrearToken
-      $datos = array('usuario' => $usuario, 'clave' => $clave);
-      $token = AutentificadorJWT::CrearTokenEmpleado($datos);
-      $payload = json_encode(array('usuario' => $usuario, 'jwt' => $token));
-      $response->getBody()->write($payload);
+
+    //  //CrearToken
+    //   $datos = array('usuario' => $usuario, 'clave' => $clave);
+    //   $token = AutentificadorJWT::CrearTokenEmpleado($datos);
+    //   $payload = json_encode(array('usuario' => $usuario, 'jwt' => $token));
+    //   $response->getBody()->write($payload);
    
-        
-   
-    $nuevoId = $empleado->CrearEmpleado();
 
-
-    $payload = json_encode(array("mensaje" => "El Empleado ah sido creado", "id" => $nuevoId));
 
     $response->getBody()->write($payload);
     return $response
@@ -91,156 +95,72 @@ class EmpleadosController extends Empleado
 
 
 
-public function TraerUno($request, $response, $args)
+public function TraerUnoPorId($request, $response, $args)
 {
-    $usuario = $args['usuario'];
-    $payload = null;
-
-    try {
-        if (empty(str_replace(' ', '', $usuario))) {
-            throw new Exception("El usuario ingresado es inválido.");
-        }
-
-        $empleado = Empleado::Obtenerusuario($usuario);
-
-        if (!$empleado) {
-            throw new Exception("No se encontró un empleado con el usuario " . $usuario);
-        }
-
-        $payload = json_encode($empleado);
-    } catch (Exception $ex) {
-        $mensaje = $ex->getMessage();
-        $payload = json_encode(array('error' => $mensaje));
-    } finally {
-        $response->getBody()->write($payload);
-        return $response->withHeader('Content-Type', 'application/json');
-    }
+    $id = $args['id'];
+    $empleado = Empleado::getEmpleadoPorId($id);
+    $payload = json_encode($empleado);
+    $response->getBody()->write($payload);
+    return $response->withHeader('Content-Type', 'application/json');   
+ 
 }
 
 public function TraerTodos($request, $response, $args)
 {
-    $lista = Empleado::ObtenerTodos();
-    $payload = null;
-
-    try {
-        if (empty($lista)) {
-            throw new Exception("No se encontraron empleados.");
-        }
-
-        $payload = json_encode(array("listaEmpleado" => $lista));
-    } catch (Exception $ex) {
-        $mensaje = $ex->getMessage();
-        $payload = json_encode(array('error' => $mensaje));
-    } finally {
+    $lista = Empleado::GetEmpleados();
+        $payload = json_encode(array("Empleados" => $lista));
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
-    }
 }
 
 
 
         public function ModificarUno($request, $response, $args)
     {
-      $parametros = $request->getParsedBody();
-
-      $id = $parametros['id'];
-      $idTipoEmpleado = $parametros['idTipoEmpleado'];
-      $idEstado = $parametros['idEstado'];
-      $usuario = $parametros['usuario'];
-      $clave = $parametros['clave'];
-
-      $payload = null;
-
-      try 
-      {
-        $erroresValidacion = Empleado::Validar($usuario);
-
-        if(count($erroresValidacion) > 0)
-        {
-          throw new Exception(json_encode($erroresValidacion), 800);
-        }
-
-        $empleado = new Empleado();
-        $empleado->id = $id;
-        $empleado->idTipoEmpleado = $idTipoEmpleado;
-        $empleado->idEstado = $idEstado;
-        $empleado->usuario = $usuario;
-        $empleado->clave = $clave;
-        $empleado->ModificarEmpleado($empleado);
-
-        $payload = json_encode(array("mensaje" => "Empleado modificado con exito"));
-      } 
-      catch (Exception $ex) 
-      {
-        $mensaje = $ex->getMessage();
-
-         
-        $payload = json_encode(array('Error' => $mensaje));
-      }
-      finally
-      {
+        $parametros = $request->getParsedBody();
+        $id = $parametros['id'];
+        Empleado::UpdateEmpleado($id);
+        $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
-      }
     }
 
     public function BorrarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
-
-        $usuarioId = $parametros['usuarioId'];
-        usuario::borrarUsuario($usuarioId);
-
+        $usuarioId = $parametros['id'];
+        Empleado::DeleteEmpleado($usuarioId);
         $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
-
         $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
-
- 
-    public function  CargarCSV($request, $response, $args)
+    public function ExportarArma($request, $response, $args)
     {
-      $archivo= "./csv/empleado.csv";
-
-      if(($leer= fopen($archivo, 'r')) !== false){
-          $fila= fgetcsv($leer);
-          while(($fila=fgetcsv($leer)) !== false){
-              $usuario = new Empleado();
-              $usuario->id= $fila[0];
-              $usuario->idTipoEmpleado= $fila[1];
-              $usuario->idEstado = $fila[2];
-              $usuario->usuario = $fila[3];
-              $usuario->clave = $fila[4];
-
-              $usuario->CrearEmpleado();
-          }
-          fclose($leer);
-      }
-      $response->getBody()->write("Se cargo correctamente");
-      return $response;
-    }
-
-    public function GenerarCSV($request, $response, $args)
-    {
-        // Obtener la lista de empleados
-        $empleados = Empleado::ObtenerTodos();
-    
-        // Crear el contenido del archivo CSV
-        $csvContent = "Id,TipoEmpleado,Estado,Usuario\n";
-        foreach ($empleados as $empleado) {
-            $line = "{$empleado->id},{$empleado->tipoEmpleado},{$empleado->estado},{$empleado->usuario}\n";
-            $csvContent .= $line;
+        try
+        {
+            $archivo = Archivos::ExportarCSVEmpleado("./csv/empleado.csv"); 
+            if(file_exists($archivo) && filesize($archivo) > 0)
+            {
+                $payload = json_encode(array("Archivo creado:" => $archivo));
+            }
+            else
+            {
+                $payload = json_encode(array("Error" => "Datos ingresados invalidos."));
+            }
+            $response->getBody()->write($payload);
         }
-    
-        // Definir las cabeceras y el contenido del archivo de respuesta
-        $response = $response->withHeader('Content-Type', 'text/csv');
-        $response = $response->withHeader('Content-Disposition', 'attachment; filename="empleados.csv"');
-        $response->getBody()->write($csvContent);
-    
-        return $response;
+        catch(Exception $e)
+        {
+            echo $e;
+        }
+        finally
+        {
+            return $response->withHeader('Content-Type', 'text/csv');
+        }    
     }
+ 
+ 
     
     // public function ObtenerPDF($request, $response, $args)
     // {

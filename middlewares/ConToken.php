@@ -8,7 +8,7 @@ class ConToken
 {
     public function __invoke(Request $request,RequestHandler $handler) : Response
     {
-        $header = $request->getHeaderLine(("Authorization")); //
+        $header = $request->getHeaderLine(("Authorization")); 
         if(!empty($header))
         {
             $token = trim(explode("Bearer", $header)[1]);
@@ -17,10 +17,10 @@ class ConToken
         {
             $token = "";
         }
-        $response = new Response(); //
+        $response = new Response();  
         try
         {
-            json_encode(array("Token" => AutentificadorJWT::ValidarToken($token)));
+            json_encode(array("Token" => AutentificadorJWT::VerificarToken($token)));
             $response = $handler->handle($request); 
         }
         catch(Exception $excepcion)

@@ -15,15 +15,17 @@ use Slim\Routing\RouteContext;
 require_once './db/AccesoDatos.php';
 require __DIR__ . "./vendor/autoload.php";
 require_once './middlewares/AutentificadorJWT.php';
-require_once './middlewares/Logger.php';
 
+require_once './controllers/LoguerController.php';
 require_once './controllers/EmpleadosController.php';
 require_once './controllers/ProductosController.php';
 require_once './controllers/MesasController.php';
-require_once './controllers/PedidosController.php';
-require_once './controllers/PedidoProductoController.php';
-require_once './controllers/EncuestaController.php';
+require_once './controllers/PedidoController.php';
+require_once './controllers/FacturaController.php';
 
+require_once './controllers/EncuestaController.php';
+require_once './middlewares/ConToken.php';
+require_once './middlewares/SoloAdmin.php';
 
 // Load ENV
 //$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -39,40 +41,7 @@ $app->addErrorMiddleware(true, true, true);
 
 
 
-// JWT
-$app->group('/autentificacion', function (RouteCollectorProxy $group) {
-
-    $group->post('/crearToken', function (Request $request, Response $response) {    
-      $parametros = $request->getParsedBody();
-     
-      $usuario = $parametros['usuario'];
-      $contraseña = $parametros['clave'];
   
-      $datos = array('usuario' => $usuario, 'clave' => $contraseña);
-  
-      try 
-      {
-        $token = AutentificadorJWT::CrearTokenEmpleado($datos);
-        $payload = json_encode(array('usuario' => $usuario, 'jwt' => $token));
-      } 
-      catch (Exception $e) 
-      {
-        $payload = json_encode(array('error' => $e->getMessage()));
-      }
-  
-      $response->getBody()->write($payload);
-      return $response
-        ->withHeader('Content-Type', 'application/json');
-    });
-  });
-
- 
-
-  
- 
-    
-
-
 // Routes
 // $app->post("/usuario", \UsuarioController::class. ":CargarUno");
 // $app->post("/empleados", \EmpleadosController::class. ":CargarUno");
@@ -90,61 +59,53 @@ $app->group('/autentificacion', function (RouteCollectorProxy $group) {
 
  
 
-
 $app->group('/empleados', function (RouteCollectorProxy $group) {
-  $group->post('[/]', \EmpleadosController::class . ':CargarUno');
-  $group->get('[/csv]', \EmpleadosController::class . ':GenerarCSV');
-  $group->post('[/CargarCSV]', \EmpleadosController::class . ':CargarCSV');
+  $group->post('/altaEmpleado', \EmpleadosController::class . ':CargarUno');
+  // ->add(new SoloAdmin());
+  $group->put('/', \EmpleadosController::class . ':ModificarUno')->add(new SoloAdmin());
+  $group->get('/listarEmpleados', \EmpleadosController::class . ':TraerTodos');
+  $group->delete('/', \EmpleadosController::class . ':BorrarUno')->add(new SoloAdmin());
+  $group->get('/csv/', \EmpleadosController::class . ':ExportarEmpleado');
+});
+// ->add(new ConToken());
 
-  
-  $group->get('[/]', \EmpleadosController::class . ':TraerTodos');
-    $group->get('/csv', \EmpleadosController::class . ':ObtenerCSV');
-    $group->get('/pdf', \EmpleadosController::class . ':ObtenerPDF');
-    $group->get('/{usuario}', \EmpleadosController::class . ':TraerUno') ->add(new SoloAdmin()) ;
-   
-  });
-   
-  
+$app->group('/productos', function (RouteCollectorProxy $group) {
+$group->post('/altaProducto', \ProductosController::class . ':CargarProducto');
+$group->get('/exportarCSV', \ProductosController::class . ':ExportarProductos')->add(new SoloAdmin());
+$group->get('/listarProductos', \ProductosController::class . ':MostrarProductos');
+$group->post('/importarCSV', \ProductosController::class . ':ImportarProductos')->add(new SoloAdmin());
+})->add(new ConToken());
 
-  $app->group('/productos', function (RouteCollectorProxy $group) {
-    $group->get('[/]', \ProductosController::class . ':TraerTodos') ->add(new SoloAdmin()) ;
-    $group->get('/pdf', \ProductosController::class . ':ObtenerPDF');
-    $group->get('/csv', \ProductosController::class . ':ObtenerCSV');
-    $group->post('[/]', \ProductosController::class . ':CargarUno') ->add(new SoloAdmin()) ;
-    $group->post('/cargar/csv', \ProductosController::class . ':CargarCSV');
-  });
-  
-  $app->group('/pedidos', function (RouteCollectorProxy $group) {
-    $group->get('[/]', \PedidosController::class . ':TraerTodos');
-    $group->get('/{codigo}', \PedidosController::class . ':TraerUno');
-    $group->post('[/]', \PedidosController::class . ':CargarUno');
-    $group->post('/cobrar', \PedidosController::class . ':Cobrar');
-    $group->post('/estado/cerrar', \PedidosController::class . ':CerrarPedidoMesa');
-  })->add(\Logger::class . ':VerificarCredenciales');
-  
-  $app->group('/pedidos-productos', function (RouteCollectorProxy $group) {
-    $group->get('/estado', \PedidoProductoController::class . ':ObtenerProductosListos');
-    $group->get('/estado/empleado', \PedidoProductoController::class . ':ProductosPendientesEmpleado');
-    $group->post('/estado/empleado', \PedidoProductoController::class . ':CambiarEstadoEmpleado');
-  })->add(\Logger::class . ':VerificarCredenciales');
-  
-  $app->group('/encuesta', function (RouteCollectorProxy $group) {
-    $group->post('[/]', \EncuestaController::class . ':AltaEncuesta');
-    $group->get('[/]', \EncuestaController::class . ':MejoresEncuestas') ->add(new ConToken()) ;
-  });
-  
+$app->group('/mesas', function (RouteCollectorProxy $group) {
+$group->post('/altaMesa', \MesasController::class . ':CargarMesa');
+$group->get('/listarMesas', \MesasController::class . ':MostrarMesas')->add(new SoloAdmin());
+$group->put('/abrirMesa', \MesasController::class . ':AbrirMesa')->add(new SoloAdmin());
+$group->put('/cambiarEstado', \MesasController::class . ':CambiarEstadoMesa')->add(new SoloAdmin());
+$group->delete('/cerrarMesa', \MesasController::class . ':CerrarMesa')->add(new SoloAdmin());
+})->add(new ConToken());
 
+$app->group('/pedidos', function (RouteCollectorProxy $group) { 
+$group->post('/altaPedido', \PedidoController::class . ':CargarPedido')->add(new SoloAdmin());
+$group->get('/listarPedidos', \PedidoController::class . ':MostrarPedidos')->add(new SoloAdmin());
+$group->get('/MostrarPedidosEmpleado', \PedidoController::class . ':MostrarPedidosEmpleado');
+$group->get('/ConsultarPedidosListos', \PedidoController::class . ':ConsultarPedidosListos')->add(new SoloAdmin());
+$group->get('/MostrarPedidosPreparados', \PedidoController::class . ':MostrarPedidosPreparados');
+$group->get('/MesaPopular',  \PedidoController::class . ':ConsultarMesaPopular')->add(new SoloAdmin());
+$group->put('/prepararPedido', \PedidoController::class . ':PrepararPedido');
+$group->put('/PedidoListo', \PedidoController::class . ':CambiarEstadoListo');
+})->add(new ConToken());
 
-  $app->group('/mesas', function (RouteCollectorProxy $group) {
-    $group->post('/estado', \MesasController::class . ':CambiarMesaServida');
-    $group->post('[/]', \MesasController::class . ':CargarUno');
-    $group->get('[/]', \MesasController::class . ':TraerTodos');
-    $group->get('/disponibles', \MesasController::class . ':TraerDisponible');
-    $group->get('/estadistica/usadas', \MesasController::class . ':ObtenerMesasMasUsadas');
-   
-   
-  })->add(\Logger::class . ':VerificarCredenciales');
-  
+$app->post('/Encuesta', \EncuestaController::class . ':CargarEncuesta');
+$app->post('/Facturar', \FacturaController::class . ':CargarFactura')->add(new SoloAdmin());
+$app->get('/MostrarFacturas', \FacturaController::class . ':MostrarFacturas');
+$app->get('/MejoresEncuestas', \EncuestaController::class . ':MostrarMejores')->add(new SoloAdmin());
+$app->post('/demoraPedido', \PedidoController::class . ':ConsultarDemoraPedido');
+$app->post('/loguin', \LoguerController::class . ':GenerarToken');
 
-  $app->run();
+$app->get('[/]', function (Request $request, Response $response) {    
+  $response->getBody()->write("TP Programacion III");
+  return $response;
+});
+
+$app->run();
   

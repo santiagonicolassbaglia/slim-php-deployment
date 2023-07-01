@@ -1,168 +1,73 @@
 <?php
-require_once './models/Mesa.php';
-require_once './models/Pedido.php';
-require_once './models/PedidoProducto.php';
-require_once './interfaces/IApiUsable.php';
+require_once "./models/Mesa.php";
+require_once "./models/Pedido.php";
 
-class MesasController extends Mesa
+class MesaController extends Mesa
 {
-
-  public function TraerTodos($request, $response, $args)
-  {
-     
-    $payload = null;
-
-    try 
+    public static $estados = array("con cliente esperando pedido", "con cliente comiendo", "con cliente pagando", "cerrada");
+    public function CargarMesa($request, $response, $args)
     {
-      $lista = Mesa::ObtenerTodos();
+        $parametros = $request->getParsedBody();
+        $estado = $parametros['estado'];
 
-      if($lista == null || count($lista) < 1)
-      {
-        throw new Exception("No se encontraron mesas.");
-      }
+        if(in_array($estado, $this::$estados))
+        {
+            $producto = new Mesa();
+            $producto->estado = $estado;
+            $producto->AltaMesa();
+            $payload = json_encode(array("Mensaje" => "Mesa creado con exito"));
+        }
+        else
+        {
+            $payload = json_encode(array("Mensaje" => "Estado de mesa no valido. (con cliente esperando pedido / con cliente comiendo / con cliente pagando / cerrada)"));
+        }
 
-      $payload = json_encode($lista);
-    } 
-    catch (Exception $ex) 
-    {
-      $payload = json_encode(array('Error' => $ex->getMessage()));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
     }
-    finally
+
+    public function MostrarMesas($request, $response, $args)
     {
-      $response->getBody()->write($payload);
-      return $response->withHeader('Content-Type', 'application/json');
+        $lista = Mesa::GetMesas();
+        $payload = json_encode(array("Mesas" => $lista));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
     }
-  }
-  
 
-  public function TraerDisponible($request, $response, $args)
-  {
-    $payload = null;
-
-    try 
+    public function CambiarEstadoMesa($request, $response, $args)
     {
-      $lista = Mesa::TraerMesasDisponibles();
-
-      if($lista == null || count($lista) < 1)
-      {
-        throw new Exception("No se encontraron mesas disponibles.");
-      }
-
-      $payload = json_encode($lista);
-    } 
-    catch (Exception $ex) 
-    {
-      $payload = json_encode(array('Error' => $ex->getMessage()));
+        $parametros = $request->getParsedBody();
+        $mesa = Mesa::GetMesaPorId($parametros['idMesa']);
+        $listaPedidos = Pedido::GetPedidosListos();
+        foreach ($listaPedidos as $pedido)
+        {
+            if($pedido->idMesa == $mesa->id && $pedido->estado == "Listo para servir!")
+            {
+                Mesa::CambiarEstado($mesa->id, "con cliente comiendo");
+                $response->getBody()->write("Se ha modificado el estado de la mesa con exito!\n");
+                break;
+            }
+        }
+        return $response->withHeader('Content-Type', 'application/json');
     }
-    finally
+
+    public function CerrarMesa($request, $response, $args)
     {
-      $response->getBody()->write($payload);
-      return $response->withHeader('Content-Type', 'application/json');
+        $parametros = $request->getParsedBody();
+        $mesa = Mesa::GetMesaPorId($parametros['idMesa']);
+        Mesa::CambiarEstado($mesa->id, "cerrada");
+        $response->getBody()->write("Mesa cerrada con exito!");
+        return $response->withHeader('Content-Type', 'application/json');
     }
-  }
 
- 
-  public function CargarUno($request, $response, $args)
-  {
-    $payload = null;
-
-    try 
+    public function AbrirMesa($request, $response, $args)
     {
-      $mesa = new Mesa();
-      $mesa->estadoId = 4;
-      $codigo = $mesa->CrearMesa();
-      $payload = json_encode(array("mensaje" => "Mesa creada con exito", "codigo" => $codigo));
-    } 
-    catch (Exception $ex) 
-    {
-      $mensaje = $ex->getMessage();
-      if($ex->getCode() == 800)
-      {
-          $mensaje = json_decode($ex->getMessage());
-      }
-      $payload = json_encode(array('Error' => $mensaje));
+        $parametros = $request->getParsedBody();
+        $mesa = Mesa::GetMesaPorId($parametros['idMesa']);
+        Mesa::CambiarEstado($mesa->id, "con cliente esperando pedido");
+        $response->getBody()->write("Mesa abierta con exito!");
+        return $response->withHeader('Content-Type', 'application/json');
     }
-    finally
-    {
-      $response->getBody()->write($payload);
-      return $response->withHeader('Content-Type', 'application/json');
-    }
-  }
-  
-  public function CambiarMesaServida($request, $response, $args)
-  {
-    $parametros = $request->getParsedBody();
-    $codigoPedido = $parametros['codigoPedido'];
-    $payload = null;
-
-    try 
-    {
-      $pedido = Pedido::ObtenerPorCodigo($codigoPedido);
-
-      if($pedido == null)
-      {
-        throw new Exception("No existe el pedido.");
-      }
-
-      $mesa = Mesa::ObtenerPorId($pedido->idMesa);
-
-      if(PedidoProducto::ValidarTodosServidos($codigoPedido) == false)
-      {
-        throw new Exception("No todos los productos estan listos para servir.");
-      }
-
-      $mesa->estadoId = "2";
-      Mesa::PutMesa($mesa);
-      $pedidosListos = PedidoProducto::ObtenerPorCodigoPedido($codigoPedido);
-      
-      foreach ($pedidosListos as $key => $pedidoProducto) 
-      {
-        $pedidoProducto->idEstado = 4;
-        PedidoProducto::PutGeneral($pedidoProducto);
-      }
-      
-      $payload = json_encode(array('Respuesta' => "Se realizo la operacion con exito."));
-    } 
-    catch (Exception $ex) 
-    {
-      $mensaje = $ex->getMessage();
-      if($ex->getCode() == 800)
-      {
-          $mensaje = json_decode($ex->getMessage());
-      }
-      $payload = json_encode(array('Error' => $mensaje));
-    }
-    finally
-    {
-      $response->getBody()->write($payload);
-      return $response->withHeader('Content-Type', 'application/json');
-    }
-  }
-  public function ObtenerMesasMasUsadas($request, $response, $args)
-  {
-    try 
-      {
-          $pedido = Pedido::ObtenerMasUsadas();
-          if($pedido == null)
-          {
-              throw new Exception("No se encontraron mesas.");
-          }
-
-          $payload = json_encode(array('La mesa mas usada:' => $pedido->idMesa, 'Cantidad de usos' => $pedido->cantidadUso));
-      } 
-      catch (Exception $ex) 
-      {
-          $mensaje = $ex->getMessage();
-          if($ex->getCode() == 800)
-          {
-              $mensaje = json_decode($ex->getMessage());
-          }
-          $payload = json_encode(array('Error' => $mensaje));
-      }
-      finally
-      {
-          $response->getBody()->write($payload);
-          return $response->withHeader('Content-Type', 'application/json');
-      }
-  }
 }
+
+?>
