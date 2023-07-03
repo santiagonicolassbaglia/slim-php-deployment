@@ -7,52 +7,52 @@ class AutentificadorJWT
     private static $claveSecreta = 'tioSanti';
     private static $tipoEncriptacion = ['HS256'];
 
-    public static function CrearTokenEmpleado($datos)
-    {
-        try 
-        {
-            // Se instancia un objeto de la clase Empleado
-            $empleado = new Empleado();
+    // public static function CrearTokenEmpleado($datos)
+    // {
+    //     try 
+    //     {
+    //         // Se instancia un objeto de la clase Empleado
+    //         $empleado = new Empleado();
              
-            $empleadoExistente = $empleado->getEmpleadoPorNombre($datos['nombre']);
-            $clave = $datos["clave"];
-            $claveHasheada = md5($clave);
-            var_dump(   $empleadoExistente , $datos['clave'] , $empleadoExistente->clave, password_verify($datos['clave'], $empleadoExistente->clave) , $datos['clave'] == $empleadoExistente->clave);
+    //         $empleadoExistente = $empleado->getEmpleadoPorNombre($datos['nombre']);
+    //         $clave = $datos["clave"];
+    //         $claveHasheada = md5($clave);
+    //         var_dump(   $empleadoExistente , $datos['clave'] , $empleadoExistente->clave, password_verify($datos['clave'], $empleadoExistente->clave) , $datos['clave'] == $empleadoExistente->clave);
           
 
         
-            if($empleadoExistente != null && $claveHasheada == $datos->clave)
-            {
-                $datos = array('id'=> $datos->id, 'nombre' => $datos->nombre, "rol"=> $datos->rol);
-                return AutentificadorJWT::CrearToken($datos);
+    //         if($empleadoExistente != null && $claveHasheada == $datos->clave)
+    //         {
+    //             $datos = array('id'=> $datos->id, 'nombre' => $datos->nombre, "rol"=> $datos->rol);
+    //             return AutentificadorJWT::CrearToken($datos);
            
 
                 
  
             
-            }
-           else {
+    //         }
+    //        else {
  
-                throw new Exception("Usuario o contraseña inválida");
-            }
+    //             throw new Exception("Usuario o contraseña inválida");
+    //         }
     
  
-        } 
-        catch (\Exception $ex) 
-        {
-            // Si ocurre una excepción durante el proceso, se lanza nuevamente para que sea manejada por el código que llamó a este método
-            throw $ex;
-        }
-    }
+    //     } 
+    //     catch (\Exception $ex) 
+    //     {
+    //         // Si ocurre una excepción durante el proceso, se lanza nuevamente para que sea manejada por el código que llamó a este método
+    //         throw $ex;
+    //     }
+    // }
  
 
  
-    private static function CrearToken($datos )
+    public static function CrearToken($datos)
     {
         $ahora = time();
         $payload = array(
             'iat' => $ahora,//cuando se creo el jwt
-            'exp' => $ahora + (24*24*60), // tiempo de vencimiento
+            // 'exp' => $ahora + (24*24*60), // tiempo de vencimiento
             'aud' => self::Aud(),// Audiencia del token (destinatario)
             'data' => $datos,// datos del jwt
             'app' => "JWT"// info de la aplicacion
@@ -60,12 +60,14 @@ class AutentificadorJWT
         return JWT::encode($payload, self::$claveSecreta);
     }
 
+  
 
     public static function VerificarToken($token)
-    {
-        if (empty($token)) 
+    { var_dump($token);
+        if ($token == "" || empty($token)) 
         {
             throw new Exception("El token está vacío.");
+           
         }
     
         try 

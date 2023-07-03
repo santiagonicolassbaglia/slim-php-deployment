@@ -34,7 +34,7 @@ class Producto
         return $consulta->fetchObject("Producto");
     }
 
-    public static function LoadCSV($path)
+    public static function GuardarCSV($path)
     {
         $array = Archivos::ImportarCSV($path);
         for($i = 0; $i < sizeof($array); $i++)

@@ -135,7 +135,7 @@ public function TraerTodos($request, $response, $args)
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function ExportarArma($request, $response, $args)
+    public function Exportar($request, $response, $args)
     {
         try
         {

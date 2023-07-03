@@ -26,7 +26,7 @@ require_once './controllers/FacturaController.php';
 require_once './controllers/EncuestaController.php';
 require_once './middlewares/ConToken.php';
 require_once './middlewares/SoloAdmin.php';
-
+require_once './middlewares/Validaciones.php';
 // Load ENV
 //$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 //$dotenv->safeLoad();
@@ -62,43 +62,53 @@ $app->addErrorMiddleware(true, true, true);
 $app->group('/empleados', function (RouteCollectorProxy $group) {
   $group->post('/altaEmpleado', \EmpleadosController::class . ':CargarUno');
   // ->add(new SoloAdmin());
-  $group->put('/', \EmpleadosController::class . ':ModificarUno')->add(new SoloAdmin());
-  $group->get('/listarEmpleados', \EmpleadosController::class . ':TraerTodos');
-  $group->delete('/', \EmpleadosController::class . ':BorrarUno')->add(new SoloAdmin());
-  $group->get('/csv/', \EmpleadosController::class . ':ExportarEmpleado');
+  $group->put('/{id}', \EmpleadosController::class . ':ModificarUno');//falta
+  // ->add(new SoloAdmin())
+  $group->get('/traerEmpleados', \EmpleadosController::class . ':TraerTodos');
+  $group->delete('/', \EmpleadosController::class . ':BorrarUno');//falta
+  // ->add(new SoloAdmin());
+  $group->get('/csv', \EmpleadosController::class . ':Exportar');
 });
 // ->add(new ConToken());
 
 $app->group('/productos', function (RouteCollectorProxy $group) {
-$group->post('/altaProducto', \ProductosController::class . ':CargarProducto');
-$group->get('/exportarCSV', \ProductosController::class . ':ExportarProductos')->add(new SoloAdmin());
-$group->get('/listarProductos', \ProductosController::class . ':MostrarProductos');
-$group->post('/importarCSV', \ProductosController::class . ':ImportarProductos')->add(new SoloAdmin());
-})->add(new ConToken());
+$group->post('[/]', \ProductosController::class . ':CargarProducto');
+$group->get('/csv', \ProductosController::class . ':ExportarProductos');
+// ->add(new SoloAdmin());
+$group->get('[/]', \ProductosController::class . ':MostrarProductos');
+$group->post('/importarCSV', \ProductosController::class . ':ImportarProductos');//falta
+// ->add(new SoloAdmin());
+});
+// ->add(new ConToken())
 
 $app->group('/mesas', function (RouteCollectorProxy $group) {
-$group->post('/altaMesa', \MesasController::class . ':CargarMesa');
-$group->get('/listarMesas', \MesasController::class . ':MostrarMesas')->add(new SoloAdmin());
-$group->put('/abrirMesa', \MesasController::class . ':AbrirMesa')->add(new SoloAdmin());
-$group->put('/cambiarEstado', \MesasController::class . ':CambiarEstadoMesa')->add(new SoloAdmin());
-$group->delete('/cerrarMesa', \MesasController::class . ':CerrarMesa')->add(new SoloAdmin());
-})->add(new ConToken());
+$group->post('[/]', \MesasController::class . ':CargarMesa');
+$group->get('[/]', \MesasController::class . ':MostrarMesas');
+// ->add(new SoloAdmin());
+$group->put('/abrirMesa', \MesasController::class . ':AbrirMesa');// falta
+// ->add(new SoloAdmin());
+$group->put('/cambiarEstado', \MesasController::class . ':CambiarEstadoMesa');// falta
+// ->add(new SoloAdmin());
+$group->delete('/cerrarMesa', \MesasController::class . ':CerrarMesa');
+// ->add(new SoloAdmin());
+});
+// ->add(new ConToken());
 
 $app->group('/pedidos', function (RouteCollectorProxy $group) { 
-$group->post('/altaPedido', \PedidoController::class . ':CargarPedido')->add(new SoloAdmin());
-$group->get('/listarPedidos', \PedidoController::class . ':MostrarPedidos')->add(new SoloAdmin());
+$group->post('[/]', \PedidoController::class . ':CargarPedido')->add(\Validaciones::class . ':ValidarSocio') ;
+$group->get('/listarPedidos', \PedidoController::class . ':MostrarPedidos')->add(\Validaciones::class . ':ValidarJWT') ;
 $group->get('/MostrarPedidosEmpleado', \PedidoController::class . ':MostrarPedidosEmpleado');
-$group->get('/ConsultarPedidosListos', \PedidoController::class . ':ConsultarPedidosListos')->add(new SoloAdmin());
+$group->get('/ConsultarPedidosListos', \PedidoController::class . ':ConsultarPedidosListos')->add(\Validaciones::class . ':ValidarJWT') ;
 $group->get('/MostrarPedidosPreparados', \PedidoController::class . ':MostrarPedidosPreparados');
-$group->get('/MesaPopular',  \PedidoController::class . ':ConsultarMesaPopular')->add(new SoloAdmin());
+$group->get('/MesaPopular',  \PedidoController::class . ':ConsultarMesaPopular')->add(\Validaciones::class . ':ValidarJWT') ;
 $group->put('/prepararPedido', \PedidoController::class . ':PrepararPedido');
 $group->put('/PedidoListo', \PedidoController::class . ':CambiarEstadoListo');
 })->add(new ConToken());
 
 $app->post('/Encuesta', \EncuestaController::class . ':CargarEncuesta');
-$app->post('/Facturar', \FacturaController::class . ':CargarFactura')->add(new SoloAdmin());
+$app->post('/Facturar', \FacturaController::class . ':CargarFactura')->add(\Validaciones::class . ':ValidarJWT') ;
 $app->get('/MostrarFacturas', \FacturaController::class . ':MostrarFacturas');
-$app->get('/MejoresEncuestas', \EncuestaController::class . ':MostrarMejores')->add(new SoloAdmin());
+$app->get('/MejoresEncuestas', \EncuestaController::class . ':MostrarMejores')->add(\Validaciones::class . ':ValidarJWT') ;
 $app->post('/demoraPedido', \PedidoController::class . ':ConsultarDemoraPedido');
 $app->post('/loguin', \LoguerController::class . ':GenerarToken');
 

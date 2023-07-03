@@ -2,7 +2,7 @@
 require_once "./models/Mesa.php";
 require_once "./models/Pedido.php";
 
-class MesaController extends Mesa
+class MesasController extends Mesa
 {
     public static $estados = array("con cliente esperando pedido", "con cliente comiendo", "con cliente pagando", "cerrada");
     public function CargarMesa($request, $response, $args)

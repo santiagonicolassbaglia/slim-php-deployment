@@ -9,6 +9,7 @@ class ConToken
     public function __invoke(Request $request,RequestHandler $handler) : Response
     {
         $header = $request->getHeaderLine(("Authorization")); 
+        var_dump($header);
         if(!empty($header))
         {
             $token = trim(explode("Bearer", $header)[1]);

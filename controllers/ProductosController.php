@@ -2,7 +2,7 @@
 require_once "./models/Producto.php";
 require_once "./models/Archivos.php";
 
-class ProductoController extends Producto
+class ProductosController extends Producto
 {
     public static $sectres = array("Vinoteca", "Cerveceria", "Cocina", "CandyBar");
     public function CargarProducto($request, $response, $args)
@@ -68,7 +68,7 @@ class ProductoController extends Producto
         try
         {
             $archivo = ($_FILES["archivo"]);
-            Producto::LoadCSV($archivo["tmp_name"]);
+            Producto::GuardarCSV($archivo["tmp_name"]);
             $payload = json_encode(array("Mensaje" => "Productos cargados!"));
         }
         catch(Throwable $mensaje)
