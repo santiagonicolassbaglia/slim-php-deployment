@@ -41,6 +41,22 @@ public $numeroMesa;
         $consulta->execute();
     }
 
+
+    public static function GetMesasMasUsada()
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT NumeroMesa, COUNT(*) AS CantidadDeVecesUsadas
+        FROM mesas
+        GROUP BY NumeroMesa
+        ORDER BY CantidadDeVecesUsadas DESC
+ LIMIT 1 
+ 
+        
+        ");
+        $consulta->execute();
+        return $consulta->fetchObject();
+ }
 }
 
 ?>

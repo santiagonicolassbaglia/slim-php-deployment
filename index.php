@@ -86,7 +86,8 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 $group->post('[/]', \MesasController::class . ':CargarMesa');
 $group->get('[/]', \MesasController::class . ':MostrarMesas');
 // ->add(new SoloAdmin());
-$group->put('/abrirMesa', \MesasController::class . ':AbrirMesa');// falta
+$group->get('/masUsadas', \MesasController::class . ':masUsada') ->add(\Validaciones::validarRoles(['Socio', 'Mozo']))->add(\Validaciones::class . ':validarJWTUsuario');
+$group->put('/abrirMesa', \MesasController::class . ':AbrirMesa'); 
 // ->add(new SoloAdmin());
 $group->put('/cambiarEstado', \MesasController::class . ':CambiarEstadoMesa');// falta
 // ->add(new SoloAdmin());
@@ -150,7 +151,7 @@ $app->get('/MejoresEncuestas', \EncuestaController::class . ':MejoresEncuestas')
 $app->post('/demoraPedido', \PedidoController::class . ':ConsultarDemoraPedido');
 $app->post('/loguin', \LoguerController::class . ':GenerarToken');
 
-$app->post('/csv/cargar/{baseDatos}', \csvControler::class . ':cargarcsv');
+$app->post('/archivos/cargar/{baseDatos}', \csvControler::class . ':cargarcsv');
 $app->get('/archivos/descargar/{baseDatos}',  \csvControler::class . ':descargarcsv');
 $app->get('[/]', function (Request $request, Response $response) {    
   $response->getBody()->write("TP Programacion III");

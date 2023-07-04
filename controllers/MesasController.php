@@ -103,6 +103,15 @@ $producto->numeroMesa = $numeroMesa;
         
         return $response->withHeader('Content-Type', 'application/json');
   }
+
+
+  public function masUsada($request, $response, $args)
+    {
+        $mesa = Mesa::GetMesasMasUsada();
+        $payload = json_encode( $mesa);
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+  }
 }
 
 ?>
