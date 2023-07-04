@@ -11,8 +11,9 @@ class LoguerController extends  AutentificadorJWT
         $datosBD = Empleado::getEmpleadoPorNombre($datosPost["nombre"]);
   
          
+       
 
-        if($datosBD != null && $datosPost["clave"] == $datosBD->clave)
+        if($datosBD != null && password_verify($datosPost["clave"],  $datosBD->clave))
         {
             $datos = array('id'=> $datosBD->id, 'nombre' => $datosBD->nombre, "rol"=> $datosBD->rol);
             $token = AutentificadorJWT::CrearToken($datos);

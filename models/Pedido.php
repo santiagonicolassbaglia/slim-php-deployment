@@ -122,28 +122,95 @@ class Pedido
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'stdClass');
     }
 
-
-    public static function ValidarPedido($rol)
+    public static function GetPedidosPendientes($sector)
     {
-        $sector = "vacio";
-        switch ($rol)
-        {
-            case "Bartender":
-                $sector = "Vinoteca";
-                break;
-            case "Cervecero":
-                $sector = "Cerveceria";
-                break;
-            case "Cocinero":
-                $sector = "Cocina";
-                break;
-            case "Pastelero":
-                $sector = "CandyBar";
-                break;
-        }
-        return $sector;
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT pedidos.*
+        FROM pedidos
+        join productos on productos.id = pedidos.idProducto
+        WHERE pedidos.estado = :estado and productos.sector = :sector");
+        $consulta->bindValue(':estado', "Pendiente");
+        $consulta->bindValue(':sector', $sector);
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Pedido');
+ }
+
+
+ public static function GetPedidoscodigoMesa($idMesa,$codigoPedido)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * 
+        FROM pedidos 
+        WHERE codigoPedido = :codigoPedido and idMesa =:idMesa" );
+        $consulta->bindValue(':codigoPedido', $codigoPedido);
+        $consulta->bindValue(':idMesa', $idMesa);
+        $consulta->execute();
+        return $consulta->fetchObject('Pedido');
+    }
+     
+
+
+    public static function GetPedidosPreparacion($sector)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT pedidos.* 
+        FROM pedidos
+        join productos on productos.id = pedidos.idProducto
+        WHERE pedidos.estado = :estado and productos.sector = :sector");
+        $consulta->bindValue(':estado', "En preparacion");
+        $consulta->bindValue(':sector', $sector);
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Pedido');
+   }
+
+
+
+   public static function ListoParaServir($idPedido)
+   {
+       $objAccesoDato = AccesoDatos::obtenerInstancia();
+       $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos 
+       SET estado = :estado, horaFinalizacion = :horaFinalizacion 
+       WHERE id = :id");
+       $consulta->bindValue(':estado', 'Listo para servir', PDO::PARAM_STR);
+       $consulta->bindValue(':id', $idPedido, PDO::PARAM_INT);
+       $consulta->bindValue(':horaFinalizacion', date('H:i:sa'));
+       $consulta->execute();
+   }
+
+
+
+
+   public static function ServirPedido($idPedido)
+    {
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos 
+        SET estado = :estado 
+        WHERE id = :id");
+        $consulta->bindValue(':estado', 'Entregado', PDO::PARAM_STR);
+        $consulta->bindValue(':id', $idPedido, PDO::PARAM_INT);
+        $consulta->execute();
     }
 
+
+
+
+    public static function CuentaMesa($idMesa)
+    {
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("SELECT productos.precio, pedidos.cantidadProductos
+         FROM productos 
+         INNER JOIN pedidos ON productos.id = pedidos.idProducto 
+         WHERE pedidos.idMesa = :idMesa");
+        $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_STR);
+        $consulta->execute();
+        $venta = $consulta->fetchAll(PDO::FETCH_ASSOC);
+        $totalPagar=0;
+        
+        foreach ($venta as $element){
+            $totalPagar+= intval($element['cantidadProductos'])*intval($element['precio']);
+        }
+        return $totalPagar;
+   }
 }
 
 ?>

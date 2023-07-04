@@ -63,7 +63,7 @@ class AutentificadorJWT
   
 
     public static function VerificarToken($token)
-    { var_dump($token);
+    { 
         if ($token == "" || empty($token)) 
         {
             throw new Exception("El token está vacío.");

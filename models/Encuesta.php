@@ -39,8 +39,14 @@ class Encuesta
     public static function ObtenerMejoresEncuestas()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM encuestas WHERE puntuacionMesa > 5 AND puntuacionRestaurante > 5 AND puntuacionMozo > 5 AND puntuacionCocinero > 5");
+
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT *,
+        ((puntuacionMesa + puntuacionRestaurante + puntuacionMozo + puntuacionCocinero) / 4.0) AS Promedio
+        FROM encuestas
+        ORDER BY Promedio DESC
+        LIMIT 3");
+
         $consulta->execute();
-        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Encuesta');
-    }
+        return $consulta->fetchAll(PDO::FETCH_ASSOC );
+   }
 }

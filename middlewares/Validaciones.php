@@ -35,20 +35,21 @@ class Validaciones
     public function ValidarSocio( $request,  $handler) 
     {
 
-        $header = $request->getHeaderLine(("Authorization"));
+        $token = $request->getHeaderLine(("Authorization"));
         //$token = trim(explode("Bearer", $header)[1]);
-        sscanf($header, 'Bearer %s', $token);
-        $response = new Response();
+     
  
+        $response = new Response();
+
         try
         {
           
-          if($token != 'null')
+          if($token != 'null' && isset($token))
           { 
              $data = AutentificadorJWT::ObtenerData($token); 
-
-          
-            if($data->tipo == "Socio")
+             var_dump($data);
+             var_dump($data->rol);
+            if($data->rol == "Socio")
             {
                 $response= $handler->handle($request);
             }
@@ -108,6 +109,10 @@ class Validaciones
 
 
 
+    
+
+
+
 
    public function TablaBorrados($request, $handler)
    {
@@ -139,6 +144,76 @@ class Validaciones
 
     return $response;
    } 
+
+
+
+
+
+   public static function validarRoles($rolesPermitidos)
+   {
+       return function ($request, $handler) use ($rolesPermitidos) {
+           $dataJwt = $request->getAttribute('jwt');
+           $error = null;
+           $statusError = 500;
+           $response = new Response();
+
+           if (!$dataJwt) {
+               $error = 'no hay un jwt guardado';
+               $statusError = 401;
+           }
+
+           if (!in_array($dataJwt->rol, $rolesPermitidos)) {
+               $error = 'no cuenta con permisos para ingresar';
+               $statusError = 404;
+           }
+
+           if (isset($error)) {
+            
+               $response->getBody()->write(  $error );
+               $response->withStatus($statusError);
+           } else {
+               $response = $handler->handle($request);
+           }
+
+
+           return $response;
+        };}
+
+ 
+ 
+
+
+        public static function validarJWTUsuario($request, $handler)
+        {
+            $error = null;
+            $statusError = 500;
+            $response = new Response();
+        
+            $token = $request->getHeaderLine(('Authorization'));
+    
+            if (!$token) {
+                $error = 'no hay un jwt guardado';
+                $statusError = 401;
+            }
+    
+            try {   AutentificadorJWT::VerificarToken($token);
+                $tokenVerificado =  AutentificadorJWT::ObtenerData($token);
+                $request = $request->withAttribute('jwt', $tokenVerificado);
+                $response = $handler->handle($request);
+            } catch (\Exception $e) {
+    
+                $error = $e->getMessage();
+                $statusError = 401;
+            }
+    
+            if (isset($error)) {
+                $response->getBody()->write($error);
+                $response->withStatus($statusError);
+            }
+    
+            return $response;
+    }
+
 
 }
 ?>

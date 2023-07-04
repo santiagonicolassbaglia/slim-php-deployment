@@ -4,12 +4,14 @@ class Mesa
 {
     public $id;
     public $estado;
+public $numeroMesa;
 
     public function AltaMesa()
-    {
+    {var_dump($this);
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (estado) VALUES (:estado)");
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (estado, NumeroMesa) VALUES (:estado, :numeroMesa)");
         $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
+        $consulta->bindValue(':numeroMesa', $this->numeroMesa );
         $consulta->execute();
     }
 

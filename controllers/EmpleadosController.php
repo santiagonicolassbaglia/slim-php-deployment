@@ -60,14 +60,15 @@ class EmpleadosController extends Empleado
 
     $nombre = $parametros['nombre'];
         $clave = $parametros['clave'];
-        $claveHasheada = md5($clave);
+        $claveHash = password_hash($clave, PASSWORD_DEFAULT);
+
         $rol = $parametros['rol'];
 
         if(in_array($rol, $this::$roles))
         {
             $empleado = new Empleado();
             $empleado->nombre = $nombre;
-            $empleado->clave = $claveHasheada;
+            $empleado->clave = $claveHash;
             $empleado->rol = $rol;
             $empleado->altaEmpleado();
             $payload = json_encode(array("Mensaje" => "Usuario creado con exito"));

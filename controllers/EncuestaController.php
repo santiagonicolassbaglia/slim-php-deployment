@@ -7,7 +7,7 @@ class EncuestaController extends Encuesta
     {
         $parametros = $request->getParsedBody();
     
-        $requiredParams = ['codigoPedido', 'puntuacionMesa', 'puntuacionRestaurante', 'puntuacionMozo','puntuacionCocinero','comentario'];
+        $requiredParams = ['idMesa', 'puntuacionMesa', 'puntuacionRestaurante', 'puntuacionMozo','puntuacionCocinero','comentario'];
     
         $missingParams = [];
         foreach ($requiredParams as $param) {
@@ -23,8 +23,16 @@ class EncuestaController extends Encuesta
                 ->withStatus(400)
                 ->withHeader('Content-Type', 'application/json');
         }
+        $mesa = Mesa::GetMesaPorId($parametros["idMesa"]);
+        if (  $mesa->estado !='Cerrada') {
+            $payload = json_encode(array("error" =>'la mesa deve estar cerrada para hacer la encuesta') );
+            $response->getBody()->write($payload);
+            return $response
+                ->withStatus(400)
+                ->withHeader('Content-Type', 'application/json');
+        }
     
-        $codigoPedido = $parametros["codigoPedido"];
+        $codigoPedido = $parametros["idMesa"];
         $puntuacionMesa = $parametros["puntuacionMesa"];
         $puntuacionRestaurante = $parametros["puntuacionRestaurante"];
         $puntuacionMozo = $parametros["puntuacionMozo"];
@@ -57,7 +65,6 @@ class EncuestaController extends Encuesta
         $response->getBody()->write($payload);
         return $response->withHeader("Content-type", "application/json");
     }
-
 
     public function MejoresEncuestas($request, $response, $args)
     {
