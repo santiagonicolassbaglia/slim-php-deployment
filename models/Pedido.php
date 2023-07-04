@@ -191,6 +191,14 @@ class Pedido
         $consulta->execute();
     }
 
+    public static function VerificarPedidosRetrasados($tiempoEstipulado)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedidos WHERE estado = 'En preparacion' AND ADDTIME(horaCreacion, SEC_TO_TIME(horaFinalizacion - horaCreacion )) < :tiempoPreparacion");
+        $consulta->bindValue(':tiempoEstipulado', $tiempoEstipulado);
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Pedido');
+    }
 
 
 
