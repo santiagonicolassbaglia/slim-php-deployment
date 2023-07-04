@@ -62,5 +62,74 @@ class Archivos
             }
         }
     }
+
+
+  //  ExportarPDFEmpleado
+    public static function ExportarPDFEmpleado($path)
+    {
+        $listaProductos = Empleado::getEmpleados();
+        $file = fopen($path, "w");
+        foreach($listaProductos as $producto)
+        {
+            $separado= implode(",", (array)$producto);  
+            if($file)
+            {
+                fwrite($file, $separado.",\r\n"); 
+            }                           
+        }
+        fclose($file);  
+        return $path;     
+    }
+    public static function ExportarPDFProductos($path)
+    {
+        $listaProductos = Producto::GetProductos();
+        $file = fopen($path, "w");
+        foreach($listaProductos as $producto)
+        {
+            $separado= implode(",", (array)$producto);  
+            if($file)
+            {
+                fwrite($file, $separado.",\r\n"); 
+            }                           
+        }
+        fclose($file);  
+        return $path;     
+    }
+    public static function ImportarPDF($path)
+    {
+        $aux = fopen($path, "r");
+        $array = [];
+        if(isset($aux))
+        {
+            try
+            {
+                while(!feof($aux))
+                {
+                    $datos = fgets($aux);                        
+                    if(!empty($datos))
+                    {          
+                        array_push($array, $datos);                                                
+                    }
+                }
+            }
+            catch(Exception $e)
+            {
+                echo "Error:";
+                echo $e;
+            }
+            finally
+            {
+                fclose($aux);
+                return $array;
+            }
+        }
+    }
+
+
+   // ExportarPDFImg: exportar pdf de la imagen LogoRestaurante.jpg dentro de la carpeta img
+   
+
+
+     
 }
 ?>

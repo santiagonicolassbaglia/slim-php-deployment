@@ -162,67 +162,36 @@ public function TraerTodos($request, $response, $args)
     }
  
  
-    
-    // public function ObtenerPDF($request, $response, $args)
-    // {
-    //     $lista = Empleado::ObtenerTodos();
-
-    //     if (count($lista) > 0) {
-    //         // Crea una nueva instancia de TCPDF
-    //         $pdf = new TCPDF();
-
-    //         // Establece la orientación y el tamaño de página
-    //         $pdf->setPrintHeader(false);
-    //         $pdf->setPrintFooter(false);
-    //         $pdf->AddPage();
-
-    //         // Define el contenido del PDF
-    //         $contenido = 'Lista de empleados:' . PHP_EOL;
-    //         foreach ($lista as $empleado) {
-    //             $contenido .= Empleado::ToString($empleado) . PHP_EOL;
-    //         }
-
-    //         // Agrega el contenido al PDF
-    //         $pdf->writeHTML($contenido, true, false, true, false, '');
-
-    //         // Genera el PDF y guarda en un archivo
-    //         $pdf->Output('empleados.pdf', 'D');
-
-    //         return $response->withHeader('Content-Type', 'application/pdf');
-    //     }
-    // }
-    
  
-    //generar archivo .pdf
 
-    // public function generarPDF($request, $response, $args)
-    // {
-    //     $lista = Empleado::ObtenerTodos();
-
-    //     if (count($lista) > 0) {
-    //         // Crea una nueva instancia de TCPDF
-    //         $pdf = new TCPDF();
-
-    //         // Establece la orientación y el tamaño de página
-    //         $pdf->setPrintHeader(false);
-    //         $pdf->setPrintFooter(false);
-    //         $pdf->AddPage();
-
-    //         // Define el contenido del PDF
-    //         $contenido = 'Lista de empleados:' . PHP_EOL;
-    //         foreach ($lista as $empleado) {
-    //             $contenido .= Empleado::ToString($empleado) . PHP_EOL;
-    //         }
-
-    //         // Agrega el contenido al PDF
-    //         $pdf->writeHTML($contenido, true, false, true, false, '');
-
-    //         // Genera el PDF y guarda en un archivo
-    //         $pdf->Output('empleados.pdf', 'D');
-
-    //         return $response->withHeader('Content-Type', 'application/pdf');
-    //     }
-    // }
+    public function ExportarPDF($request, $response, $args)
+    {
+        try
+        {
+            $archivo = Archivos::ExportarPDFEmpleado("./pdf/empleado.pdf"); 
+            if(file_exists($archivo) && filesize($archivo) > 0)
+            {
+                $payload = json_encode(array("Archivo creado:" => $archivo));
+            }
+            else
+            {
+                $payload = json_encode(array("Error" => "Datos ingresados invalidos."));
+            }
+            $response->getBody()->write($payload);
+        }
+        catch(Exception $e)
+        {
+            echo $e;
+        }
+        finally
+        {
+            return $response->withHeader('Content-Type', 'text/pdf');
+        }    
+    }
+ 
+    
+   
+   
     
 
 

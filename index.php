@@ -62,12 +62,16 @@ $app->addErrorMiddleware(true, true, true);
 $app->group('/empleados', function (RouteCollectorProxy $group) {
   $group->post('[/]', \EmpleadosController::class . ':CargarUno');
   // ->add(new SoloAdmin());
-  $group->put('/{id}', \EmpleadosController::class . ':ModificarUno');//falta
+  $group->put('/{id}', \EmpleadosController::class . ':ModificarUno'); 
   // ->add(new SoloAdmin())
   $group->get('/traerEmpleados', \EmpleadosController::class . ':TraerTodos');
-  $group->delete('/', \EmpleadosController::class . ':BorrarUno');//falta
+  $group->delete('/', \EmpleadosController::class . ':BorrarUno'); 
   // ->add(new SoloAdmin());
   $group->get('/csv', \EmpleadosController::class . ':Exportar');
+
+  $group->get('/pdf', \EmpleadosController::class . ':ExportarPDF');
+
+
 });
 // ->add(new ConToken());
 
@@ -77,7 +81,7 @@ $group->post('[/]', \ProductosController::class . ':CargarProducto');
 $group->get('/csv', \ProductosController::class . ':ExportarProductos');
 // ->add(new SoloAdmin());
 $group->get('[/]', \ProductosController::class . ':MostrarProductos');
-$group->post('/importarCSV', \ProductosController::class . ':ImportarProductos');//falta
+$group->post('/importarCSV', \ProductosController::class . ':ImportarProductos'); 
 // ->add(new SoloAdmin());
 });
 // ->add(new ConToken())
@@ -89,7 +93,7 @@ $group->get('[/]', \MesasController::class . ':MostrarMesas');
 $group->get('/masUsadas', \MesasController::class . ':masUsada') ->add(\Validaciones::validarRoles(['Socio', 'Mozo']))->add(\Validaciones::class . ':validarJWTUsuario');
 $group->put('/abrirMesa', \MesasController::class . ':AbrirMesa'); 
 // ->add(new SoloAdmin());
-$group->put('/cambiarEstado', \MesasController::class . ':CambiarEstadoMesa');// falta
+$group->put('/cambiarEstado', \MesasController::class . ':CambiarEstadoMesa'); 
 // ->add(new SoloAdmin());
 $group->delete('/cerrarMesa', \MesasController::class . ':CerrarMesa');
 // ->add(new SoloAdmin());
